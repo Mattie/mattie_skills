@@ -325,16 +325,8 @@ def create_run(project_root: str, readme: str) -> dict[str, object]:
         if not unstaged and not staged:
             recent = git_output(root, ["log", "-1", "-p", "--", "README.md"])
             append_section(run_dir / "diffs.txt", "Most recent committed README change", recent or "[No history]\n")
-        append_section(
-            run_dir / "diffs.txt",
-            "Starting unstaged project paths",
-            git_output(root, ["diff", "--name-status"]) or "[No changes]\n",
-        )
-        append_section(
-            run_dir / "diffs.txt",
-            "Starting staged project paths",
-            git_output(root, ["diff", "--cached", "--name-status"]) or "[No changes]\n",
-        )
+        append_section(run_dir / "diffs.txt", "Starting unstaged project diff", git_output(root, ["diff"]) or "[No changes]\n")
+        append_section(run_dir / "diffs.txt", "Starting staged project diff", git_output(root, ["diff", "--cached"]) or "[No changes]\n")
     elif prior:
         old_snapshot = runs / prior / "README.latest.md"
         if not old_snapshot.exists():
@@ -556,12 +548,12 @@ def require_fresh_sources(run_dir_value: str) -> dict[str, object]:
 
 
 def capture_ending_git_evidence(root: Path) -> tuple[str, str, str]:
-    """Collect final Git path evidence before the last source-freshness check."""
+    """Collect final Git evidence before the last source-freshness check."""
 
     return (
         git_output(root, ["status", "--short"]),
-        git_output(root, ["diff", "--name-status"]),
-        git_output(root, ["diff", "--cached", "--name-status"]),
+        git_output(root, ["diff"]),
+        git_output(root, ["diff", "--cached"]),
     )
 
 
@@ -575,22 +567,14 @@ def finish_run(run_dir_value: str, status: str, response: bytes) -> dict[str, ob
     refresh = require_fresh_sources(run_dir_value)
     git = metadata_value(run_dir, "Git available") == "yes"
     if git:
-        final_status, unstaged_paths, staged_paths = capture_ending_git_evidence(root)
+        final_status, unstaged, staged = capture_ending_git_evidence(root)
     else:
         final_status = "Git is not available."
-        unstaged_paths = staged_paths = ""
+        unstaged = staged = ""
     refresh = require_fresh_sources(run_dir_value)
     if git:
-        append_section(
-            run_dir / "diffs.txt",
-            "Ending unstaged project paths",
-            unstaged_paths or "[No changes]\n",
-        )
-        append_section(
-            run_dir / "diffs.txt",
-            "Ending staged project paths",
-            staged_paths or "[No changes]\n",
-        )
+        append_section(run_dir / "diffs.txt", "Ending unstaged project diff", unstaged or "[No changes]\n")
+        append_section(run_dir / "diffs.txt", "Ending staged project diff", staged or "[No changes]\n")
     atomic_write(run_dir / "response.md", response)
     refresh = require_fresh_sources(run_dir_value)
     run_path = run_dir / "run.md"

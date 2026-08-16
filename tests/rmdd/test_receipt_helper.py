@@ -425,38 +425,6 @@ class ReceiptHelperTests(unittest.TestCase):
         self.assertNotIn(".rmdd", status)
 
     @unittest.skipUnless(shutil.which("git"), "Git is unavailable")
-    def test_git_receipt_records_changed_paths_without_diff_contents(self) -> None:
-        config = self.root / "config.py"
-        config.write_text('API_TOKEN = "starting-value"\n', encoding="utf-8")
-        subprocess.run(["git", "init", "-q"], cwd=self.root, check=True)
-        subprocess.run(["git", "config", "user.email", "rmdd@example.test"], cwd=self.root, check=True)
-        subprocess.run(["git", "config", "user.name", "RMDD Test"], cwd=self.root, check=True)
-        subprocess.run(["git", "add", "README.md", "app.py", "config.py"], cwd=self.root, check=True)
-        subprocess.run(["git", "commit", "-qm", "initial"], cwd=self.root, check=True)
-
-        unstaged_secret = "unstaged-sensitive-value"
-        staged_secret = "staged-sensitive-value"
-        self.root.joinpath("app.py").write_text(
-            f'API_TOKEN = "{unstaged_secret}"\n',
-            encoding="utf-8",
-        )
-        config.write_text(f'API_TOKEN = "{staged_secret}"\n', encoding="utf-8")
-        subprocess.run(["git", "add", "config.py"], cwd=self.root, check=True)
-
-        run_dir, _ = self.start()
-        self.helper("finish", "--run-dir", str(run_dir), input_bytes=b"Recorded changed paths.\n")
-        evidence = (run_dir / "diffs.txt").read_text(encoding="utf-8")
-
-        self.assertIn("Starting unstaged project paths", evidence)
-        self.assertIn("Starting staged project paths", evidence)
-        self.assertIn("Ending unstaged project paths", evidence)
-        self.assertIn("Ending staged project paths", evidence)
-        self.assertIn("app.py", evidence)
-        self.assertIn("config.py", evidence)
-        self.assertNotIn(unstaged_secret, evidence)
-        self.assertNotIn(staged_secret, evidence)
-
-    @unittest.skipUnless(shutil.which("git"), "Git is unavailable")
     def test_local_exclude_failure_warns_and_continues(self) -> None:
         subprocess.run(["git", "init", "-q"], cwd=self.root, check=True)
         exclude = self.root / ".git" / "info" / "exclude"
