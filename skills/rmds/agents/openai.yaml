@@ -1,0 +1,7 @@
+interface:
+  display_name: "ReadMe Desired State"
+  short_description: "Write future-state README and clarify advice"
+  default_prompt: "Use $rmds to express this request in the project's desired-state README."
+
+policy:
+  allow_implicit_invocation: false

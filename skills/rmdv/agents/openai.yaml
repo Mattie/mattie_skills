@@ -1,0 +1,7 @@
+interface:
+  display_name: "ReadMe Driven Validation"
+  short_description: "Validate the latest RMDD run and its evidence"
+  default_prompt: "Use $rmdv to validate the latest RMDD run and suggest concise README clarifications."
+
+policy:
+  allow_implicit_invocation: false

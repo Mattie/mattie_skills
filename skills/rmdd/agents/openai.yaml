@@ -1,0 +1,7 @@
+interface:
+  display_name: "ReadMe Driven Development"
+  short_description: "Build the product promised by the README"
+  default_prompt: "Use $rmdd to make this project match its README and keep a private run receipt."
+
+policy:
+  allow_implicit_invocation: false
