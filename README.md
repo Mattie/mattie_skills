@@ -4,19 +4,16 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 
 ## Skill suites
 
-| Suite | Skills | Workflow |
+| Suite | Skills | Description |
 | --- | --- | --- |
-| [ReadMe Driven Development (RMDD)](docs/rmdd.md) | [`rmds`](skills/rmds/), [`rmdd`](skills/rmdd/), [`rmdv`](skills/rmdv/) | Desired state → implementation → validation → optional clarification |
+| [ReadMe Driven Development (RMDD)](docs/rmdd.md) | [`rmds`](skills/rmds/), [`rmdd`](skills/rmdd/), [`rmdv`](skills/rmdv/) | Your agent treats your ReadMe as desired state and implements everything that's different. <br/> Workflow: <br/> *Desired state → implementation → [optional validation / clarification] → repeat* |
 
 ## Skills
 
 | Skill | Description | Alternate labels |
 | --- | --- | --- |
-| [`prior-art`](skills/prior-art/) | Find proven reusable solutions, starting with repository and user-local skills, before inventing a general-purpose technical mechanism. | `does this exist?`, `YAGNI review`, `avoid reinventing the wheel` |
-| [`rmdd`](skills/rmdd/) | Make a project's implementation and tests agree with its current README while keeping a private run receipt. | `$rmdd`, `ReadMe Driven Development` |
-| [`rmds`](skills/rmds/) | Write or revise a project's public README so it describes the requested product state as current behavior. | `$rmds`, `ReadMe Desired State` |
-| [`rmdv`](skills/rmdv/) | Validate the latest RMDD run against its documentation, implementation, tests, and saved evidence. | `$rmdv`, `ReadMe Driven Validation` |
-| [`todo`](skills/todo/) | Manage project-local TODO lists for bugs, ideas, features, tasks, and custom list types. | `push todo`, `pop todo`, `search todo`, `analyze todo`, `summarize todo` |
+| [`prior-art`](skills/prior-art/) | Find existing/reusable options, starting with the current repository and local skills, before re-inventing. | `does this exist?`, `YAGNI review`, `avoid reinventing the wheel` |
+| [`todo`](skills/todo/) | Manage project-local TODO lists for bugs, ideas, features, tasks, and more. | `push todo`, `pop todo`, `search todo`, `analyze todo`, `summarize todo` |
 | [`write-plainly`](skills/write-plainly/) | Write, rewrite, or review plain-language prose while preserving technical meaning, constraints, and uncertainty. | `plain language`, `plain English`, `audience clarity` |
 | [`write-simplified-technical-english`](skills/write-simplified-technical-english/) | Write, rewrite, or review technical content with ASD-STE100 Simplified Technical English. | `ste`, `write-ste` |
 
