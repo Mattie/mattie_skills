@@ -1,0 +1,7 @@
+interface:
+  display_name: "Simplified Technical English"
+  short_description: "Write with ASD-STE100 Issue 9 guidance"
+  default_prompt: "Use $write-simplified-technical-english to rewrite this technical content in ASD-STE100 Simplified Technical English."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Todo"
+  short_description: "Manage local project .todo files"
+  default_prompt: "Use $todo to push, pop, search, analyze, or summarize project-local .todo lists."

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Write Plainly"
+  short_description: "Plain language that preserves technical meaning"
+  default_prompt: "Use $write-plainly to rewrite this for the intended reader while preserving every technical fact and constraint."
+
+policy:
+  allow_implicit_invocation: true
