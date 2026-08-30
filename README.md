@@ -14,6 +14,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | --- | --- | --- |
 | [`goal-check`](skills/goal-check/) | Summarize the thread's longer-term goal, recent work, and the human input needed next. | `goal check`, `context reset`, `quick orientation` |
 | [`prior-art`](skills/prior-art/) | Find existing/reusable options, starting with the current repository and local skills, before re-inventing. | `does this exist?`, `YAGNI review`, `avoid reinventing the wheel` |
+| [`soft-skill-creator`](skills/soft-skills-creator/) | Create, update, or soften skills whose guidance lives in judgment, voice, style, observation, or feel. | `soft skill`, `voice and style`, `qualitative judgment` |
 | [`todo`](skills/todo/) | Manage project-local TODO lists for bugs, ideas, features, tasks, and more. | `push todo`, `pop todo`, `search todo`, `analyze todo`, `summarize todo` |
 | [`write-plainly`](skills/write-plainly/) | Write, rewrite, or review plain-language prose while preserving technical meaning, constraints, and uncertainty. | `plain language`, `plain English`, `audience clarity` |
 | [`write-simplified-technical-english`](skills/write-simplified-technical-english/) | Write, rewrite, or review technical content with ASD-STE100 Simplified Technical English. | `ste`, `write-ste` |
