@@ -12,6 +12,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 
 | Skill | Description | Alternate labels |
 | --- | --- | --- |
+| [`aiconographer`](skills/aiconographer/) | Generate, compile, and select consistent two-color lore article icons. | `article icon`, `lore icon`, `icon candidates` |
 | [`prior-art`](skills/prior-art/) | Find existing/reusable options, starting with the current repository and local skills, before re-inventing. | `does this exist?`, `YAGNI review`, `avoid reinventing the wheel` |
 | [`todo`](skills/todo/) | Manage project-local TODO lists for bugs, ideas, features, tasks, and more. | `push todo`, `pop todo`, `search todo`, `analyze todo`, `summarize todo` |
 | [`write-plainly`](skills/write-plainly/) | Write, rewrite, or review plain-language prose while preserving technical meaning, constraints, and uncertainty. | `plain language`, `plain English`, `audience clarity` |
