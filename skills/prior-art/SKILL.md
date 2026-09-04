@@ -1,6 +1,6 @@
 ---
 name: prior-art
-description: Find existing solutions before custom technical design or implementation. Use quick proactively before adding a reusable helper, mechanism, abstraction, dependency, or algorithm with non-obvious choices or plausible prior art; exclude routine app logic, glue, bug fixes, tests, configuration, and repo-specific behavior. Use default for $prior-art, "does this exist?", prior-art, library, standard-library, YAGNI, or overengineering requests. Use deep for exhaustive research or a novel, risky, costly, architectural, unfamiliar, or unresolved decision. Search the current repository and its skills first, user-local skills second, standard and platform facilities third, current-stack permissive open source next, then cross-technology implementations, public software, standards, and literature. Verify fit, license, adoption eligibility, and evidence; return reuse, adapt, combine, reframe, build, or unresolved.
+description: Find existing solutions before custom technical design or implementation. Use quick proactively before adding a reusable helper, mechanism, abstraction, dependency, or algorithm with non-obvious choices or plausible prior art; exclude routine app logic, glue, bug fixes, tests, configuration, and repo-specific behavior. Use default for $prior-art, "does this exist?", prior-art, library, standard-library, YAGNI, or overengineering requests. Use deep for exhaustive research or a novel, risky, costly, architectural, unfamiliar, or unresolved decision. Search the current repository and its skills first, user-local skills second, standard and platform facilities third, current-stack permissive open source next, then cross-technology implementations, public software, standards, and literature. Verify fit, license, adoption eligibility, and evidence; return a ranked reuse shortlist with practical fit ratings, reusable parts, savings, catches, and a plain-language recommendation.
 ---
 
 # Prior Art
@@ -29,21 +29,15 @@ still research any technical problem.
 
 Treat a user-requested lower mode as an effort ceiling. Report the unresolved
 question and recommend a higher mode when that ceiling prevents a reliable
-verdict.
+recommendation.
 
 Escalate an agent-selected `quick` or `default` mode when its assumptions stop
 holding. State the escalation and its reason.
 
-Start the result with the selected mode:
-
-```text
-Mode: QUICK | DEFAULT | DEEP
-Status: FINAL | PROVISIONAL | INCONCLUSIVE
-Verdict: REUSE | ADAPT | COMBINE | REFRAME | BUILD | UNRESOLVED
-```
-
-Use `UNRESOLVED` only with `INCONCLUSIVE`. When useful, state the leading
-provisional verdict in the explanation.
+Keep the mode as a research-effort control. Do not open the result with a
+machine-formatted mode, status, or verdict header. Mention bounded scope,
+incomplete evidence, or an escalation in the opening or search note when it
+materially affects how the reader should use the result.
 
 ## Frame the search
 
@@ -59,10 +53,11 @@ Before searching:
    catalogs, and configured skill directories; never crawl the whole user
    profile to discover candidates.
 4. Ask about a missing constraint only when different answers would change the
-   candidate class or verdict.
+   candidate set, fit rating, or recommendation.
 5. Build search terms from the user's wording, formal domain terms, common
    library vocabulary, synonyms, and adjacent formulations of the same
-   problem.
+   problem. Identify the available search tools and use any deeper-search
+   tools recommended by the user's instructions or skill catalog.
 6. Define what counts as a complete solution, a useful component, and an
    analogy before judging candidates.
 
@@ -72,9 +67,11 @@ and state which custom code, dependency, abstraction, or maintenance burden it
 would remove. Keep correctness and unrelated architecture findings outside
 that review unless they affect replacement fit.
 
-## Follow the evidence order
+## Searching
 
-Search and prefer evidence in this order, subject to functional fit:
+Search independent lanes in parallel when useful. The order below sets
+discovery and evaluation priority, subject to functional fit; it does not
+require serial execution.
 
 1. Existing implementations, utilities, tests, documentation, and
    repository-local skills in the current repository.
@@ -89,11 +86,10 @@ Search and prefer evidence in this order, subject to functional fit:
    patents that reveal a likely solution pattern.
 7. Standards, technical literature, algorithms, and research papers.
 
-The order controls discovery, not automatic selection. Continue through the
-standard and native lane after a partial local match, and rank the final
-candidates by functional fit, maintenance burden, provenance, and adoption
-eligibility. A standard facility can outrank a local implementation when it
-meets the requirement more directly.
+Continue through applicable lanes after a partial local match, and rank the
+final candidates by functional fit, maintenance burden, provenance, and
+adoption eligibility. A standard facility can outrank a local implementation
+when it meets the requirement more directly.
 
 For the local lanes:
 
@@ -139,18 +135,27 @@ Use `quick` as a small preflight:
 6. Stop after finding a credible direct answer or after one refinement fails
    to produce a strong match.
 
-Return the verdict, the strongest one to three candidates, direct links, the
-key gap, and a confidence or escalation note. Keep this result compact enough
-to sit inside the response to the larger request.
+Return the strongest one to three candidates with direct links, one fit label
+per candidate, reusable value, the main catch, and a bounded confidence or
+escalation note. Use short bullets or a miniature table so the result can sit
+inside the response to the larger request.
+
+Use this compact fit guide in quick mode: `GREAT` is a near-complete solution
+with little work; `GOOD` offers substantial value with reasonable adaptation;
+`PARTIAL` offers meaningful reusable pieces with substantial gaps; `WEAK`
+offers narrow or indirect value with low expected payoff; `BAD` has no
+practical value under the constraints; and `UNCERTAIN` lacks enough reliable
+evidence to judge. `UNCERTAIN` is an ungraded evidence state.
 
 An unsuccessful quick check means only that no strong match appeared in the
-bounded search. Return `INCONCLUSIVE` and `UNRESOLVED`, then recommend
-`default` or `deep` when the remaining uncertainty could change the
-implementation.
+bounded search. Say what evidence could change the recommendation and suggest
+`default` or `deep` when the remaining uncertainty matters. Do not conclude
+from quick-mode absence that custom implementation is necessary.
 
 ## Run default mode
 
-Use `default` for a local-first, stack-aware investigation:
+Use `default` for a local-first, stack-aware investigation. Search independent
+lanes in parallel when that improves speed without weakening source review:
 
 1. Search current-repository implementations and skills with exact, formal,
    and adjacent-problem terms, then search configured user-local skill roots.
@@ -165,11 +170,13 @@ Use `default` for a local-first, stack-aware investigation:
    inherently architectural or algorithmic, or a strong lead points there.
 6. Verify the leading candidates from primary documentation, source, tests,
    release state, and license evidence.
-7. Stop after the leading verdict is supported and one lead-expansion pass
+7. Stop after the leading recommendation is supported and one lead-expansion pass
    adds no new high-fit candidate.
 
-Return a ranked evidence table, a concrete verdict, the custom work that would
-remain, a concise coverage summary, and unresolved uncertainty.
+Before answering, read
+[Reuse Shortlist response format](references/reuse-shortlist.md). Return its
+plain-language opening, ranked shortlist, overall recommendation, and compact
+search note.
 
 ## Run deep mode
 
@@ -208,12 +215,19 @@ Treat saturation as an evidence condition rather than permission to wait
 indefinitely. After a reasonable bounded retry for a stalled tool or evidence
 lane, mark that lane incomplete and synthesize the available evidence.
 
-If an incomplete lane could change the verdict, return `INCONCLUSIVE` and
-`UNRESOLVED` with the leading provisional verdict. Treat the bounded attempt as
-complete operationally while leaving the evidence requirement incomplete.
+If an incomplete lane could change the recommendation, explain that the
+research remains inconclusive, rate affected candidates `UNCERTAIN` when
+appropriate, and name the check that could settle the issue. Treat the bounded
+attempt as complete operationally while leaving the evidence requirement
+incomplete.
 
-Keep the final answer verdict-focused. Include rejected candidates only when
-their rejection explains the recommendation or prevents repeated research.
+Before answering, read
+[Reuse Shortlist response format](references/reuse-shortlist.md). Keep the
+final answer focused on the shortlist and practical recommendation. Summarize
+deep coverage in the search note. Show the full ledger only when the user asks
+for it or omitted evidence would materially affect reliance. Include rejected
+candidates only when their rejection explains the recommendation or prevents
+repeated research.
 
 ## Classify and compare candidates
 
@@ -256,17 +270,19 @@ source-available, missing-license, and ambiguous-license candidates
 `STUDY-ONLY` unless the user supplies a different license policy.
 
 Treat `STUDY-ONLY` solely as adoption eligibility. A `STUDY-ONLY` candidate
-cannot support `REUSE`, `ADAPT`, or `COMBINE`; it can inform `REFRAME` or
-`BUILD`. Mark missing immutable license evidence provisional or `STUDY-ONLY`.
-Do not copy code from a `STUDY-ONLY` candidate. Present license findings as
-engineering constraints rather than legal advice.
+may appear when its permitted reference value materially helps, but it cannot
+drive a recommendation to copy or adopt it. Rate only the value of uses allowed
+under its adoption status. Missing immutable license evidence normally makes
+the candidate's adoption value `UNCERTAIN` or `STUDY-ONLY`. Do not copy code
+from a `STUDY-ONLY` candidate. Present license findings as engineering
+constraints rather than legal advice.
 
 ## Use a disposable spike when needed
 
 Run a spike in any mode only when one small experiment is the fastest safe way
-to settle a verdict-changing uncertainty. Keep its scope proportional to the
-mode. Escalate an agent-selected mode when the experiment would exceed that
-scope.
+to settle a fit- or recommendation-changing uncertainty. Keep its scope
+proportional to the mode. Escalate an agent-selected mode when the experiment
+would exceed that scope.
 
 For a spike:
 
@@ -292,60 +308,45 @@ Skip the spike and state the blocker when safe execution needs credentials,
 paid access, production access, unsafe installers, new user authorization, or
 isolation that the current environment cannot verify.
 
-## Deliver the verdict
+## Present the reuse shortlist
 
-Use these verdicts:
+Fit belongs to one candidate at a time. It measures expected practical
+leverage after integration effort, active constraints, incompatibilities,
+licensing, maintenance, and risk. Artifact type or age alone does not set the
+rating: tests, notes, data, or an older implementation may rate highly when
+they provide substantial practical value for the actual problem.
 
-- `REUSE`: One adoption-eligible existing solution meets the requirements
-  through direct use.
-- `ADAPT`: One adoption-eligible candidate meets the requirements with bounded
-  integration.
-- `COMBINE`: A small set of adoption-eligible existing components covers the
-  requirement.
-- `REFRAME`: The requirements are contradictory, theoretically impossible, or
-  too underspecified for a responsible implementation verdict. State the
-  constraint that must change and the nearest feasible alternatives.
-- `BUILD`: The requirement is feasible, and no adoptable candidate covers it
-  under the stated constraints. Identify reusable components, algorithms, and
-  the exact remaining custom work.
-- `UNRESOLVED`: Required evidence is missing or conflicting. State the leading
-  provisional verdict and the check that would settle it.
+Use only `GREAT`, `GOOD`, `PARTIAL`, `WEAK`, `BAD`, or `UNCERTAIN` as fit
+labels. Rank candidates by practical usefulness under the actual constraints:
 
-Use these statuses:
+- Normally shortlist `GREAT`, `GOOD`, and `PARTIAL` candidates.
+- Include a `WEAK` candidate when its indirect value informs the recommendation.
+- Include a `BAD` candidate only when it is a prominent red herring or its
+  rejection prevents repeated investigation.
+- Include an `UNCERTAIN` candidate when it is a credible lead and a specific
+  additional check could change its value.
+- If no candidate has useful or explanatory value, say that none made the
+  shortlist and omit the empty table.
 
-- `FINAL`: The evidence required for the selected mode supports the verdict.
-- `PROVISIONAL`: A credible verdict exists within a deliberately bounded mode,
-  and named additional research could still change it.
-- `INCONCLUSIVE`: Missing or conflicting evidence could materially change the
-  verdict. Pair this status only with `UNRESOLVED`.
+For quick mode, use the compact shape defined in that mode's instructions. For
+default and deep modes, use the opening, exact Reuse Shortlist table, **What
+I'd do**, and **Search note** defined in
+[Reuse Shortlist response format](references/reuse-shortlist.md).
 
-Before emitting `REUSE`, `ADAPT`, or `COMBINE`, list the adoption status of
-every candidate that drives the verdict and confirm that each is eligible
-under the active license and dependency policy. If a driving candidate is
-`STUDY-ONLY`, continue searching for an eligible candidate. In a bounded
-`quick` search, return `INCONCLUSIVE` and `UNRESOLVED` with the study-only
-candidate as a lead.
+The overall recommendation belongs in **What I'd do**. State which candidate
+or combination to start with, the sequence, directly reusable parts,
+adaptation or integration, remaining custom work, any constraint that should
+change, and the next research check when evidence is insufficient.
 
-Require `FINAL` status for `BUILD`. Absence from a `quick` search alone is
-insufficient. `Default` or `deep` may return `FINAL` and `BUILD` after their
-applicable evidence lanes and stopping conditions are satisfied, using
-calibrated searched-source language.
+Before recommending direct reuse, adaptation, or combination, confirm that
+every driving candidate is eligible under the active license and dependency
+policy. `GREAT` and `GOOD` reuse recommendations require adoption eligibility.
+Continue searching when a `STUDY-ONLY` lead cannot support the required use.
 
-For `quick`, provide a compact inline result.
-
-For `default` and `deep`, include:
-
-1. A one-sentence verdict and recommendation.
-2. A ranked table with candidate, solution class, adoption status, solved
-   behavior, stack fit, evaluated revision, immutable license evidence,
-   evidence strength, and key gap.
-3. The integration path and remaining custom work.
-4. A compact coverage ledger with searched lanes and query families, important
-   rejected leads, searched repository paths and user-local skill roots,
-   expansion pass count, unresolved gaps, and the research date.
-5. Direct primary-source links beside the claims they support.
-
-Use calibrated absence language such as:
+A recommendation to build custom functionality because no suitable solution
+exists requires completed default or deep coverage and its stopping condition.
+Absence from quick mode is insufficient. Use calibrated searched-source
+language such as:
 
 > No credible reusable solution was found under these constraints in the
 > searched sources.
@@ -361,4 +362,4 @@ solution unless the user separately requests that action.
 
 Report incomplete research when required sources or tools are unavailable.
 Keep legal clearance, patent clearance, and full dependency security audits
-outside the verdict unless the user explicitly requests them.
+outside the recommendation unless the user explicitly requests them.

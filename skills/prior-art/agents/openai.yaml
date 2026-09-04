@@ -1,7 +1,7 @@
 interface:
   display_name: "Prior Art"
-  short_description: "Repository, user-local skills, then standard reuse"
-  default_prompt: "Use $prior-art to inspect the current repository and repository-local skills first, configured user-local skills second, then standard/native and external solutions before we build this."
+  short_description: "Find reusable tools and compare practical fit"
+  default_prompt: "Use $prior-art to find existing solutions, compare their practical fit, reusable parts, savings, work, and catches, then recommend what to do."
 
 policy:
   allow_implicit_invocation: true

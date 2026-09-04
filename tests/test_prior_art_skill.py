@@ -1,4 +1,4 @@
-"""Regression checks for the prior-art skill's search order and safeguards."""
+"""Regression checks for the prior-art skill's workflow and response contract."""
 
 from __future__ import annotations
 
@@ -10,6 +10,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_PATH = REPO_ROOT / "skills" / "prior-art" / "SKILL.md"
 OPENAI_PATH = REPO_ROOT / "skills" / "prior-art" / "agents" / "openai.yaml"
+FORMAT_PATH = (
+    REPO_ROOT / "skills" / "prior-art" / "references" / "reuse-shortlist.md"
+)
 
 
 def _skill_text() -> str:
@@ -43,6 +46,7 @@ class PriorArtSkillContractTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.text = _skill_text()
         cls.openai = OPENAI_PATH.read_text(encoding="utf-8")
+        cls.response_format = FORMAT_PATH.read_text(encoding="utf-8")
 
     def test_routing_description_advertises_local_first_order(self) -> None:
         description_match = re.search(r"(?m)^description: (.+)$", self.text)
@@ -56,7 +60,7 @@ class PriorArtSkillContractTests(unittest.TestCase):
         self.assertLess(local_skills, standard)
 
     def test_evidence_lanes_put_local_sources_before_standard_library(self) -> None:
-        section = _section(self.text, "Follow the evidence order")
+        section = _section(self.text, "Searching")
         items = re.findall(
             r"(?ms)^(\d+)\. (.*?)(?=^\d+\. |\Z)",
             section,
@@ -106,7 +110,7 @@ class PriorArtSkillContractTests(unittest.TestCase):
             default.index("Search GitHub"),
         )
 
-    def test_deep_mode_and_output_ledger_record_local_coverage(self) -> None:
+    def test_deep_mode_keeps_full_ledger_and_compact_default_output(self) -> None:
         deep = _normalized(_section(self.text, "Run deep mode"))
         self.assertIn("searched repository paths", deep)
         self.assertIn("searched user-local skill roots", deep)
@@ -116,29 +120,75 @@ class PriorArtSkillContractTests(unittest.TestCase):
             deep.index("standard and native facilities"),
         )
 
-        delivery = _normalized(_section(self.text, "Deliver the verdict"))
-        self.assertIn("searched repository paths and user-local skill roots", delivery)
+        self.assertIn("Summarize deep coverage in the search note", deep)
+        self.assertIn("Show the full ledger only when the user asks", deep)
 
-    def test_openai_routing_metadata_names_all_three_initial_lanes(self) -> None:
+    def test_openai_metadata_advertises_the_reuse_shortlist_outcome(self) -> None:
         prompt_match = re.search(r'(?m)^  default_prompt: "(.+)"$', self.openai)
         self.assertIsNotNone(prompt_match)
         prompt = prompt_match.group(1)
-        self.assertLess(prompt.index("current repository"), prompt.index("user-local skills"))
-        self.assertLess(prompt.index("user-local skills"), prompt.index("standard/native"))
+        self.assertIn("$prior-art", prompt)
+        self.assertIn("practical fit", prompt)
+        self.assertIn("reusable parts", prompt)
+        self.assertIn("catches", prompt)
+        self.assertIn("recommend", prompt)
 
         description_match = re.search(r'(?m)^  short_description: "(.+)"$', self.openai)
         self.assertIsNotNone(description_match)
         description = description_match.group(1).lower()
-        self.assertLess(description.index("repository"), description.index("user-local skills"))
-        self.assertLess(description.index("user-local skills"), description.index("standard"))
+        self.assertIn("reusable", description)
+        self.assertIn("practical fit", description)
 
     def test_local_borrowing_keeps_scope_and_adoption_guards(self) -> None:
-        evidence = _normalized(_section(self.text, "Follow the evidence order"))
+        evidence = _normalized(_section(self.text, "Searching"))
         self.assertIn("never crawl the whole user profile", _normalized(self.text))
         self.assertIn("do not execute their actions merely because they were discovered", evidence)
         self.assertIn("Installed presence alone does not establish adoption eligibility", evidence)
         self.assertIn("otherwise mark the candidate `STUDY-ONLY`", evidence)
         self.assertIn("standard facility can outrank a local implementation", evidence)
+
+    def test_public_result_uses_candidate_fit_and_a_prose_recommendation(self) -> None:
+        presentation = _normalized(_section(self.text, "Present the reuse shortlist"))
+        self.assertNotIn("Mode: QUICK", self.text)
+        self.assertNotIn("Verdict: REUSE", self.text)
+        self.assertIn("Fit belongs to one candidate at a time", presentation)
+        self.assertIn("The overall recommendation belongs in **What I'd do**", presentation)
+        for label in ("GREAT", "GOOD", "PARTIAL", "WEAK", "BAD", "UNCERTAIN"):
+            self.assertIn(f"`{label}`", presentation)
+
+    def test_default_and_deep_modes_route_to_the_response_reference(self) -> None:
+        reference = "[Reuse Shortlist response format](references/reuse-shortlist.md)"
+        self.assertIn(reference, _section(self.text, "Run default mode"))
+        self.assertIn(reference, _section(self.text, "Run deep mode"))
+
+    def test_response_reference_defines_fit_and_rendering_contract(self) -> None:
+        for label in ("GREAT", "GOOD", "PARTIAL", "WEAK", "BAD", "UNCERTAIN"):
+            self.assertRegex(self.response_format, rf"(?m)^- \*\*{label}:\*\*")
+        self.assertIn("an ungraded evidence state", self.response_format)
+        self.assertIn(
+            "| Existing solution | Good&nbsp;fit? | Overview | "
+            "Reusable parts / Savings | Work needed / Catches |",
+            self.response_format,
+        )
+        self.assertNotIn("> | Existing solution", self.response_format)
+        self.assertIn("**Saves:**", self.response_format)
+        self.assertIn("**Catch:**", self.response_format)
+        self.assertIn("**What I'd do:**", self.response_format)
+        self.assertIn("**Search note:**", self.response_format)
+
+    def test_quick_absence_stays_bounded_and_custom_work_keeps_its_gate(self) -> None:
+        quick = _normalized(_section(self.text, "Run quick mode"))
+        presentation = _normalized(_section(self.text, "Present the reuse shortlist"))
+        self.assertIn("Do not conclude from quick-mode absence", quick)
+        self.assertIn("requires completed default or deep coverage", presentation)
+        self.assertIn("Absence from quick mode is insufficient", presentation)
+
+    def test_study_only_candidates_cannot_drive_adoption(self) -> None:
+        licenses = _normalized(_section(self.text, "Verify licenses"))
+        presentation = _normalized(_section(self.text, "Present the reuse shortlist"))
+        self.assertIn("cannot drive a recommendation to copy or adopt it", licenses)
+        self.assertIn("rate only the value of uses allowed", licenses.lower())
+        self.assertIn("require adoption eligibility", presentation)
 
     def test_existing_license_spike_and_action_boundaries_remain(self) -> None:
         self.assertIn("Use a commit-SHA permalink", self.text)
