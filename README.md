@@ -13,6 +13,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | Skill | Description | Alternate labels |
 | --- | --- | --- |
 | [`prior-art`](skills/prior-art/) | Find existing/reusable options, starting with the current repository and local skills, before re-inventing. | `does this exist?`, `YAGNI review`, `avoid reinventing the wheel` |
+| [`rrr-review-remedy-respond`](skills/rrr-review-remedy-respond/) | Review active GitHub PR comments, fix verified issues, push remedies, and reply to or resolve each thread. | `RRR`, `review remedy respond`, `address PR comments` |
 | [`todo`](skills/todo/) | Manage project-local TODO lists for bugs, ideas, features, tasks, and more. | `push todo`, `pop todo`, `search todo`, `analyze todo`, `summarize todo` |
 | [`write-plainly`](skills/write-plainly/) | Write, rewrite, or review plain-language prose while preserving technical meaning, constraints, and uncertainty. | `plain language`, `plain English`, `audience clarity` |
 | [`write-simplified-technical-english`](skills/write-simplified-technical-english/) | Write, rewrite, or review technical content with ASD-STE100 Simplified Technical English. | `ste`, `write-ste` |
