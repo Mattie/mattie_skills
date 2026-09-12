@@ -196,6 +196,24 @@ class PriorArtSkillContractTests(unittest.TestCase):
         self.assertIn("Do not add a dependency", self.text)
         self.assertIn("Never turn limited search coverage into a universal claim", self.text)
 
+    def test_service_consumption_has_separate_eligibility_and_evidence_rules(self) -> None:
+        services = _normalized(_section(self.text, "Evaluate callable services"))
+        self.assertIn("access eligible", services)
+        self.assertIn("access unresolved", services)
+        self.assertIn("access incompatible", services)
+        self.assertIn("code-license policy separately", services)
+        self.assertIn("does not verify useful fulfillment", services)
+        self.assertIn("For service consumption", self.response_format)
+
+    def test_service_lane_preserves_relevance_and_coverage_limits(self) -> None:
+        searching = _normalized(_section(self.text, "Searching"))
+        self.assertIn("skip it when offline", searching)
+        self.assertIn("[Service discovery](references/service-discovery.md)", searching)
+        self.assertIn("one relevant catalog", _normalized(_section(self.text, "Run quick mode")))
+        deep = _normalized(_section(self.text, "Run deep mode"))
+        self.assertIn("partial results, failures", deep)
+        self.assertIn("does not satisfy saturation", deep)
+
 
 if __name__ == "__main__":
     unittest.main()

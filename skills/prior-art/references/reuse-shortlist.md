@@ -57,11 +57,29 @@ leverage for the actual problem.
 
 | Column | Required content |
 |---|---|
-| **Existing solution** | A short, hyperlinked candidate name followed by its license and adoption status. For each third-party adoption candidate, link immutable license evidence and the evaluated revision or content-addressed artifact. Include revision details for standard-library or repository-local candidates only when they materially affect confidence or reuse. |
+| **Existing solution** | A short, hyperlinked candidate name followed by its license and adoption status. For each third-party code/asset adoption candidate, link immutable license evidence and the evaluated revision or content-addressed artifact. For service consumption, show access eligibility and dated primary-source terms evidence instead; distinguish unresolved access from unverified fulfillment. Include revision details for standard-library or repository-local candidates only when they materially affect confidence or reuse. |
 | **Good&nbsp;fit?** | One bold fit label: `GREAT`, `GOOD`, `PARTIAL`, `WEAK`, `BAD`, or `UNCERTAIN`. |
 | **Overview** | A factual description of what the candidate contains or does. |
 | **Reusable parts / Savings** | Begin with what we can directly reuse. Follow with a separate `**Saves:**` paragraph explaining the work avoided or capability gained. Keep savings qualitative unless a time or cost estimate has supporting evidence. |
 | **Work needed / Catches** | Begin with the work required to make the candidate useful. Follow with a separate `**Catch:**` paragraph for its main limitation, risk, or constraint. |
+
+## Callable-service candidates
+
+Keep the same columns and fit labels for services. Identify whether the proposed
+reuse is consuming a remote service or installing/copying code. Service use needs
+access eligibility under the task constraints; any client code still needs its
+own license verification. Catalog metadata alone leaves access unresolved.
+
+In Overview, state the advertised capability with appropriate attribution.
+In Reusable parts / Savings, explain the work an eligible service could replace.
+In Work needed / Catches, include authentication/payment integration, meaningful
+price and operational unknowns, and the limits of fulfillment evidence. Cite
+retrieval dates for mutable terms or catalog observations. Preserve conflicting
+prices across sources; report raw asset units when decimals are unverified.
+
+In the Search note, state which catalogs were searched and whether results were
+name-only, locally filtered from a bounded inventory, truncated, or unavailable.
+Never equate missing activity with zero or unpaid checks with paid fulfillment.
 
 ## Markdown template
 

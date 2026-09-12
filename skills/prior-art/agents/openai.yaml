@@ -1,7 +1,7 @@
 interface:
   display_name: "Prior Art"
-  short_description: "Find reusable tools and compare practical fit"
-  default_prompt: "Use $prior-art to find existing solutions, compare their practical fit, reusable parts, savings, work, and catches, then recommend what to do."
+  short_description: "Compare reusable code and services for practical fit"
+  default_prompt: "Use $prior-art to find existing solutions, including callable services when relevant, compare their practical fit, reusable parts, savings, work, and catches, then recommend what to do."
 
 policy:
   allow_implicit_invocation: true
