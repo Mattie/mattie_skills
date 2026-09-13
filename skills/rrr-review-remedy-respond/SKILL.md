@@ -56,8 +56,9 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Re-read `git diff` and map each change back to one or more comments.
    - If verification cannot run, record the exact blocker and use code inspection to reduce risk.
 
-7. Commit and push.
+7. Commit and push when remedies changed files.
    - Explicit RRR invocation authorizes commits, ordinary pushes to the verified PR head, GitHub replies, and resolution of clearly concluded threads. It does not authorize force pushes, branch deletion, PR merging, manual deployment actions or approvals, or changes outside the selected PR.
+   - If the pass requires only replies or classifications, skip the commit and push and continue to the response step.
    - Stage only RRR changes.
    - Use a direct commit message such as `Address PR review comments`.
    - Push the current PR branch after verification succeeds or after clearly documented best-effort verification.
