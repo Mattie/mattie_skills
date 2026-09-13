@@ -123,6 +123,9 @@ Use `scripts/process-sheet.mjs` from the skill. It performs these deterministic 
 7. Creates white/dark contact sheets and a randomized anonymous review pack.
 
 Trace from the high-resolution cells. Keep 48px and 192px images as render targets only.
+The normal generation contract is a 3-by-2 sheet. The compiler's explicit `--columns` and
+`--rows` overrides are recovery/import controls for another six-cell arrangement; they do not
+change the generation prompt or the six-candidate requirement.
 
 ## Blind judging
 

@@ -10,6 +10,7 @@ import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const INKS = [
   { hex: '#2C2C2B', rgb: [44, 44, 43] },
@@ -18,6 +19,7 @@ const INKS = [
 const WHITE = { hex: '#FFFFFF', rgb: [255, 255, 255] };
 const TRACE_PALETTE = [WHITE, ...INKS];
 const REVIEW_ALIASES = ['ash', 'birch', 'cedar', 'dune', 'ember', 'flint'];
+const REQUIRED_PREVIEW_SIZES = [192, 48];
 
 const VECTOR_SETTINGS = {
   preset: 'poster',
@@ -49,9 +51,9 @@ Required:
 
 Options:
   --article       Plain-text article file copied into the anonymous review pack.
-  --columns       Sheet columns. Default: 3.
-  --rows          Sheet rows. Default: 2.
-  --sizes         Comma-separated preview widths. Default: 192,48.
+  --columns       Explicit grid override; the normal sheet contract uses 3 columns.
+  --rows          Explicit grid override; the normal sheet contract uses 2 rows.
+  --sizes         Additional comma-separated preview widths; 192 and 48 are always rendered.
   --review-seed   Stable anonymous-review shuffle seed. Default: source checksum.
   --help          Show this help.
 `;
@@ -86,12 +88,23 @@ function requiredPath(args, name) {
 }
 
 /** Parse and validate a positive integer argument. */
-function positiveInteger(value, fallback, label) {
-  const parsed = value === undefined ? fallback : Number.parseInt(value, 10);
+export function positiveInteger(value, fallback, label) {
+  const parsed = value === undefined ? fallback : Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) {
     throw new Error(`${label} must be a positive integer.`);
   }
   return parsed;
+}
+
+/** Parse optional preview sizes while preserving the two judging sizes. */
+export function previewSizes(value) {
+  const requested = value === undefined ? [] : value.split(',').map((token) =>
+    positiveInteger(token.trim(), null, '--sizes'),
+  );
+  if (new Set(requested).size !== requested.length) {
+    throw new Error('--sizes contains duplicates.');
+  }
+  return [...REQUIRED_PREVIEW_SIZES, ...requested.filter((size) => !REQUIRED_PREVIEW_SIZES.includes(size))];
 }
 
 /** Refuse to mix a new run with any pre-existing files. */
@@ -130,11 +143,12 @@ async function packageVersion(depsRoot, packageParts) {
 }
 
 /** Map every RGB pixel in a tile to the nearest approved palette entry. */
-async function normalizeTile(sharp, sourcePath, region) {
+export async function normalizeTile(sharp, sourcePath, region) {
   const { data, info } = await sharp(sourcePath)
     .extract(region)
     .flatten({ background: WHITE.hex })
     .removeAlpha()
+    .toColourspace('srgb')
     .raw()
     .toBuffer({ resolveWithObject: true });
 
@@ -345,17 +359,11 @@ async function main() {
   const articlePath = args.article ? path.resolve(args.article) : null;
   const columns = positiveInteger(args.columns, 3, '--columns');
   const rows = positiveInteger(args.rows, 2, '--rows');
-  const sizes = (args.sizes ?? '192,48').split(',').map((value) =>
-    positiveInteger(value.trim(), null, '--sizes'),
-  );
+  const sizes = previewSizes(args.sizes);
 
   if (columns * rows !== REVIEW_ALIASES.length) {
     throw new Error(`This skill requires exactly ${REVIEW_ALIASES.length} candidates.`);
   }
-  if (new Set(sizes).size !== sizes.length) {
-    throw new Error('--sizes contains duplicates.');
-  }
-
   await fs.access(inputPath);
   if (articlePath) await fs.access(articlePath);
   await prepareEmptyDirectory(outputRoot);
@@ -507,7 +515,9 @@ async function main() {
   );
 }
 
-main().catch((error) => {
-  process.stderr.write(`aiconographer: ${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    process.stderr.write(`aiconographer: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  });
+}

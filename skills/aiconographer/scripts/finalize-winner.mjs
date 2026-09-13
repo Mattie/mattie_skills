@@ -61,6 +61,28 @@ async function copyExclusive(source, destination) {
   };
 }
 
+/** Refuse an existing destination before any canonical copy begins. */
+async function requireAbsent(destination) {
+  try {
+    await fs.access(destination);
+    throw new Error(`Destination already exists: ${destination}`);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+}
+
+/** Verify that a candidate file still matches the compiler's validation record. */
+async function verifySource(source, expectedSha256) {
+  await fs.access(source, constants.R_OK);
+  if (typeof expectedSha256 !== 'string' || !/^[0-9a-f]{64}$/.test(expectedSha256)) {
+    throw new Error(`Validation record has no usable SHA-256 for ${source}.`);
+  }
+  const actualSha256 = await fileSha256(source);
+  if (actualSha256 !== expectedSha256) {
+    throw new Error(`Validated source changed: ${source}`);
+  }
+}
+
 /** Finalize the selected candidate and write auditable selection metadata. */
 async function main() {
   const args = parseArgs(process.argv.slice(2));
@@ -81,42 +103,53 @@ async function main() {
 
   const validationPath = path.join(runRoot, 'validation.json');
   const validation = JSON.parse(await fs.readFile(validationPath, 'utf8'));
-  if (!validation.candidates?.[candidate]) {
+  const candidateValidation = validation.candidates?.[candidate];
+  if (!candidateValidation) {
     throw new Error(`${candidate} is missing from validation.json.`);
   }
 
   const selectionPath = path.join(runRoot, 'selection.json');
-  try {
-    await fs.access(selectionPath);
-    throw new Error(`Selection already exists: ${selectionPath}`);
-  } catch (error) {
-    if (error?.code !== 'ENOENT') throw error;
-  }
-
   const svgSource = path.join(runRoot, 'svg', `${candidate}.svg`);
   const svgDestination = path.join(runRoot, `${slug}.svg`);
-  const canonical = {
-    svg: await copyExclusive(svgSource, svgDestination),
-    previews: {},
-  };
-
-  const previewSizes = validation.previewSizes ?? Object.keys(validation.candidates[candidate].previews);
+  const previewSizes = validation.previewSizes ?? Object.keys(candidateValidation.previews ?? {});
+  const transfers = [{
+    kind: 'svg', source: svgSource, destination: svgDestination,
+    expectedSha256: candidateValidation.svg?.sha256,
+  }];
   for (const size of previewSizes) {
-    const source = path.join(runRoot, 'previews', String(size), `${candidate}.png`);
-    const destination = path.join(runRoot, `${slug}-${size}.png`);
-    canonical.previews[String(size)] = await copyExclusive(source, destination);
+    transfers.push({
+      kind: 'preview', size: String(size),
+      source: path.join(runRoot, 'previews', String(size), `${candidate}.png`),
+      destination: path.join(runRoot, `${slug}-${size}.png`),
+      expectedSha256: candidateValidation.previews?.[String(size)]?.sha256,
+    });
   }
 
-  const selection = {
-    candidate,
-    slug,
-    canonical,
-    candidateValidation: validation.candidates[candidate],
-  };
-  await fs.writeFile(selectionPath, `${JSON.stringify(selection, null, 2)}\n`, {
-    encoding: 'utf8',
-    flag: 'wx',
-  });
+  await requireAbsent(selectionPath);
+  for (const transfer of transfers) {
+    await verifySource(transfer.source, transfer.expectedSha256);
+    await requireAbsent(transfer.destination);
+  }
+
+  const canonical = { svg: null, previews: {} };
+  const created = [];
+  try {
+    for (const transfer of transfers) {
+      const copied = await copyExclusive(transfer.source, transfer.destination);
+      created.push(transfer.destination);
+      if (transfer.kind === 'svg') canonical.svg = copied;
+      else canonical.previews[transfer.size] = copied;
+    }
+
+    const selection = { candidate, slug, canonical, candidateValidation };
+    await fs.writeFile(selectionPath, `${JSON.stringify(selection, null, 2)}\n`, {
+      encoding: 'utf8',
+      flag: 'wx',
+    });
+  } catch (error) {
+    await Promise.allSettled(created.reverse().map((destination) => fs.unlink(destination)));
+    throw error;
+  }
 
   process.stdout.write(
     `${JSON.stringify({ ok: true, candidate, slug, selectionPath, canonical }, null, 2)}\n`,
