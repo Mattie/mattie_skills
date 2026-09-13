@@ -37,7 +37,6 @@ test('CLI requires explicit queries and rejects invalid options before discovery
   assert.equal(parseArgs(['--help']).help, true);
   assert.deepEqual(parseArgs(['--catalog', 'mcp', '--catalog', 'coinbase,mcp', '--', '-query']).catalogs, ['mcp', 'coinbase']);
   assert.deepEqual(parseArgs(['ocr']).catalogs, ['coinbase', 'payai', 'mcp']);
-  assert.throws(() => parseArgs(Array.from({ length: 21 }, (_, index) => `query-${index}`)), /at most 20/);
 });
 
 test('three catalogs retain claims, unknowns, conflicts, and package identities without invoking listings', async () => {

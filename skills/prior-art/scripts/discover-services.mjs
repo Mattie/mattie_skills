@@ -4,14 +4,12 @@ import { pathToFileURL } from 'node:url';
 import { ROUTES, deduplicate } from './discovery-core.mjs';
 import * as adapters from './catalog-adapters.mjs';
 
-const MAX_QUERIES = 20;
 const UNSAFE_UNICODE_CONTROLS = /[\u007f-\u009f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/gu;
 
 export const HELP = `Usage: node discover-services.mjs [options] "query" ["another query"]
   --catalog NAME[,NAME]  coinbase, payai, mcp, or all (default: all; repeatable)
   --limit N              Results per catalog/query, 1-20 (default: 5)
   --max-pages N          Pagination cap, 1-100 (default: 10)
-  At most ${MAX_QUERIES} distinct queries may be supplied.
   --json                 Emit versioned JSON including coverage and observations
   --help                 Show help
   --                     Treat following arguments as queries
@@ -50,7 +48,6 @@ export function parseArgs(args) {
   }
   options.queries = [...new Set(options.queries.map(query => query.trim()))];
   if (!options.help && (!options.queries.length || options.queries.some(query => !query))) throw new Error('Supply at least one non-empty query');
-  if (!options.help && options.queries.length > MAX_QUERIES) throw new Error(`Supply at most ${MAX_QUERIES} distinct queries`);
   options.catalogs = [...new Set(options.catalogs.length ? options.catalogs : Object.keys(ROUTES))];
   return options;
 }
