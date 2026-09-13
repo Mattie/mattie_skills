@@ -128,7 +128,10 @@ export async function mcp(options, context) {
         // A cursor may be exhausted on the next page; only the last page determines truncation.
         state.truncated = page + 1 >= options.maxPages;
       }
-    } catch (error) { state.errors.push(error.message); }
+    } catch (error) {
+      state.errors.push(error.message);
+      state.truncated ||= Boolean(cursor);
+    }
   }
   return finish('mcp', retrievedAt, queries, observations);
 }

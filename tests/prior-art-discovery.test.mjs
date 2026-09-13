@@ -37,6 +37,7 @@ test('CLI requires explicit queries and rejects invalid options before discovery
   assert.equal(parseArgs(['--help']).help, true);
   assert.deepEqual(parseArgs(['--catalog', 'mcp', '--catalog', 'coinbase,mcp', '--', '-query']).catalogs, ['mcp', 'coinbase']);
   assert.deepEqual(parseArgs(['ocr']).catalogs, ['coinbase', 'payai', 'mcp']);
+  assert.throws(() => parseArgs(Array.from({ length: 21 }, (_, index) => `query-${index}`)), /at most 20/);
 });
 
 test('three catalogs retain claims, unknowns, conflicts, and package identities without invoking listings', async () => {
@@ -179,6 +180,36 @@ test('untrusted terminal control characters are quoted in text output', async ()
   payload.searchMethod = '\u001b]0;untrusted\u0007';
   const result = await discover(parseArgs(['--catalog', 'coinbase', 'ocr']), transport(() => response(payload)));
   assert.ok(!formatText(result).includes('\u001b'));
+});
+
+test('plain-text output visibly escapes C1 and bidirectional controls', async () => {
+  const payload = structuredClone(fixture.coinbase);
+  payload.resources[0].description = 'safe\u009b[2J\u202eevil';
+  const result = await discover(parseArgs(['--catalog', 'coinbase', 'ocr']), transport(() => response(payload)));
+  const text = formatText(result);
+  assert.ok(!text.includes('\u009b'));
+  assert.ok(!text.includes('\u202e'));
+  assert.match(text, /\\u009b\[2J\\u202e/);
+});
+
+test('blank MCP names and versions are skipped as invalid registry records', async () => {
+  const invalid = structuredClone(fixture.mcp.servers[0]);
+  invalid.server.name = '   ';
+  const mock = transport(() => response({ servers: [invalid, fixture.mcp.servers[0]], metadata: {} }));
+  const result = await discover(parseArgs(['--catalog', 'mcp', 'ocr']), mock);
+  assert.equal(result.catalogs[0].queries[0].skipped, 1);
+  assert.equal(result.catalogs[0].queries[0].returned, 1);
+});
+
+test('MCP pagination failures preserve incomplete coverage', async () => {
+  const mock = transport((name, url) => {
+    if (url.searchParams.has('cursor')) return new Response('', { status: 503 });
+    return response({ servers: [fixture.mcp.servers[0]], metadata: { nextCursor: 'next' } });
+  });
+  const result = await discover(parseArgs(['--catalog', 'mcp', '--limit', '2', 'ocr']), mock);
+  assert.equal(result.catalogs[0].status, 'partial');
+  assert.equal(result.catalogs[0].queries[0].truncated, true);
+  assert.match(result.catalogs[0].queries[0].errors[0], /503/);
 });
 
 test('duplicate MCP observations keep conflicting metadata without consuming candidate slots', async () => {

@@ -89,16 +89,19 @@ export function resourceObservation(catalog, resource, retrievedAt) {
 export function mcpObservation(entry, retrievedAt) {
   const server = entry?.server;
   if (!isObject(server) || typeof server.name !== 'string' || typeof server.version !== 'string') return null;
+  const name = server.name.trim();
+  const version = server.version.trim();
+  if (!name || !version) return null;
   const remotes = Array.isArray(server.remotes) ? server.remotes : null;
   const packages = Array.isArray(server.packages) ? server.packages : null;
   return {
-    identity: `mcp:${server.name}@${server.version}`,
-    catalog: 'mcp', sourceId: server.name, retrievedAt,
-    name: server.title ?? server.name,
+    identity: `mcp:${name}@${version}`,
+    catalog: 'mcp', sourceId: name, retrievedAt,
+    name: server.title ?? name,
     kind: remotes?.length ? (packages?.length ? 'remote-and-package' : 'remote-service') : (packages?.length ? 'package' : 'unknown'),
     endpoint: null, description: server.description ?? null,
     website: server.websiteUrl ?? null, repository: server.repository ?? null,
-    version: server.version, packages, remotes,
+    version, packages, remotes,
     input: null, output: null, schema: null, method: null, paymentOptions: null,
     activity: null, updatedAt: entry._meta?.['io.modelcontextprotocol.registry/official']?.updatedAt ?? null,
     registryMetadata: entry._meta ?? null,
