@@ -4,4 +4,4 @@ interface:
   default_prompt: "Use $rrr-review-remedy-respond to assess the active PR's review comments, apply and push verified fixes when needed, reply appropriately, and resolve clearly concluded threads."
 
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false
