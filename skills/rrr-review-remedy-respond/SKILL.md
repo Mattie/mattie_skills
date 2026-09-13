@@ -35,6 +35,7 @@ Use this skill after we have pushed or are actively working on a PR and the user
 3. Gather thread-aware review data.
    - Prefer GitHub tooling that exposes review-thread state, including unresolved/resolved status, file anchors, outdated status, and replies.
    - Use `gh api graphql` for review-thread state; use a bundled script only after inspecting it and confirming it is read-only and scoped to the selected PR.
+   - Also fetch and paginate review bodies and PR conversation comments; actionable feedback may exist outside inline review threads.
    - Also inspect the current PR diff, check status, and relevant surrounding code before deciding whether a comment is valid.
 
 4. Classify every relevant comment.
