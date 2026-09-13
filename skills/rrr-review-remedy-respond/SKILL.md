@@ -74,7 +74,7 @@ Use this skill after we have pushed or are actively working on a PR and the user
 
 Always include:
 
-- PR URL or number and pushed branch.
+- PR URL or number and, when applicable, the pushed branch. If no PR or push was available, state the blocker instead.
 - Commit hash or push summary when available.
 - Comments fixed and resolved.
 - Comments answered without code changes.
