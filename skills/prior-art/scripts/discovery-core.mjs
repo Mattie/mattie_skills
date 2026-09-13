@@ -65,13 +65,15 @@ export async function readCatalog(catalog, params, context) {
 
 /** Normalize one seller listing without interpreting prices or executing metadata. */
 export function resourceObservation(catalog, resource, retrievedAt) {
-  if (!isObject(resource) || typeof resource.resource !== 'string' || !resource.resource) return null;
+  if (!isObject(resource) || typeof resource.resource !== 'string') return null;
+  const resourceId = resource.resource.trim();
+  if (!resourceId) return null;
   const bazaar = resource.extensions?.bazaar;
   return {
-    identity: `resource:${resource.resource}`,
-    catalog, sourceId: resource.resource, retrievedAt,
-    name: resource.serviceName ?? resource.resource,
-    kind: 'service', endpoint: resource.resource,
+    identity: `resource:${resourceId}`,
+    catalog, sourceId: resourceId, retrievedAt,
+    name: resource.serviceName ?? resourceId,
+    kind: 'service', endpoint: resourceId,
     description: resource.description ?? resource.metadata?.description ?? null,
     tags: resource.tags ?? null,
     input: resource.inputSchema ?? bazaar?.info?.input ?? null,
@@ -111,15 +113,19 @@ export function mcpObservation(entry, retrievedAt) {
 /** Merge exact identities only, retaining independent and conflicting observations. */
 export function deduplicate(observations) {
   const candidates = new Map();
+  const observationKeys = new Map();
   for (const observation of observations) {
     let candidate = candidates.get(observation.identity);
     if (!candidate) {
       candidate = { identity: observation.identity, matchedQueries: [], observations: [] };
       candidates.set(observation.identity, candidate);
+      observationKeys.set(observation.identity, new Set());
     }
     if (!candidate.matchedQueries.includes(observation.query)) candidate.matchedQueries.push(observation.query);
     const { query, ...evidence } = observation;
-    if (!candidate.observations.some(previous => JSON.stringify(previous) === JSON.stringify(evidence))) {
+    const evidenceKey = JSON.stringify(evidence);
+    if (!observationKeys.get(observation.identity).has(evidenceKey)) {
+      observationKeys.get(observation.identity).add(evidenceKey);
       candidate.observations.push(evidence);
     }
   }

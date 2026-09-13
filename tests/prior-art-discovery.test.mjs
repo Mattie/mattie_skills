@@ -141,6 +141,15 @@ test('malformed responses and invalid records report coverage loss', async () =>
   assert.equal(result.candidates.length, 1);
 });
 
+test('whitespace-only resource identifiers are skipped as invalid records', async () => {
+  const invalid = structuredClone(fixture.coinbase.resources[0]);
+  invalid.resource = '   ';
+  const mock = transport(() => response({ resources: [invalid, fixture.coinbase.resources[0]], partialResults: false }));
+  const result = await discover(parseArgs(['--catalog', 'coinbase', 'ocr']), mock);
+  assert.equal(result.catalogs[0].queries[0].skipped, 1);
+  assert.equal(result.catalogs[0].queries[0].returned, 1);
+});
+
 test('invalid JSON and redirects fail without fallback routes', async () => {
   for (const handler of [() => new Response('<html>'), () => { throw new TypeError('fetch failed: redirect'); }]) {
     const mock = transport(handler);
