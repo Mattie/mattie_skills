@@ -7,7 +7,7 @@ description: Compensate for your agentic propensity to overcaption, overlabel, a
 
 As an agent, you have a propensity to be very talkative in your UX labels and buttons and in various fields, all over the UI. This skill corrects for that-- not by being caveman terse or producing lower-quality UX, but by being thoughtful about not placing placeholder/overexplanatory text throughout the UI or document.
 
-For an interactive prototype, begin with a quiet view that keeps only essential labels, values, and status. When richer guidance is genuinely useful, make it available through contextual help or a mode or toggle. For a static document or user-instruction artifact, make the quiet version the main reading path and place optional detail in a short appendix, linked reference, footnote, or disclosure when the format supports one. Do not invent an interactive control for a static artifact. DO NOT USE THIS AS AN EXCUSE TO GO OVERBOARD WITH EXPLANATORY TEXT. The goal is a calm, operable experience that does not require constant reading of helper text.
+When working on a prototype or user instruction artifact, it's fine to go with your instinct, but you should create a button/mode/toggle that strips away all of the boilerplate/example text into a "quiet" view, leaving only the essential labels, values, and status. Then, provide a way to restore the richer guidance when it is useful. DO NOT USE THIS AS AN EXCUSE TO GO OVERBOARD WITH EXPLANATORY TEXT. The goal is to create a calm, operable experience that does not require constant reading of helper text, while still providing the option for richer guidance when needed.
 
 ## Human Prose
 
