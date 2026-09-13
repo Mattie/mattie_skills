@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
-import { normalizeTile, positiveInteger, previewSizes } from './process-sheet.mjs';
+import { normalizeTile, positiveInteger, previewSizes, validatePreview } from './process-sheet.mjs';
 
 const finalizer = fileURLToPath(new URL('./finalize-winner.mjs', import.meta.url));
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
@@ -37,6 +37,20 @@ test('tile normalization converts grayscale input to three-channel palette outpu
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }
+});
+
+test('preview validation accepts pixel-aligned art without partially transparent pixels', async () => {
+  const png = await sharp(Buffer.from([
+    44, 44, 43, 255, 0, 0, 0, 0,
+    44, 44, 43, 255, 0, 0, 0, 0,
+  ]), {
+    raw: { width: 2, height: 2, channels: 4 },
+  }).png().toBuffer();
+
+  const validation = await validatePreview(sharp, png, 2);
+  assert.equal(validation.partial, 0);
+  assert.equal(validation.transparent, 2);
+  assert.equal(validation.opaque, 2);
 });
 
 async function createRun(root, { alteredSvg = false, lateConflict = false } = {}) {

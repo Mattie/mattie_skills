@@ -252,8 +252,8 @@ function renderSvg(Resvg, svg, size) {
   return renderer.render().asPng();
 }
 
-/** Validate dimensions, alpha coverage, and fully opaque RGB values. */
-async function validatePreview(sharp, png, size) {
+/** Validate dimensions, transparency, and fully opaque RGB values. */
+export async function validatePreview(sharp, png, size) {
   const { data, info } = await sharp(png)
     .ensureAlpha()
     .raw()
@@ -288,8 +288,8 @@ async function validatePreview(sharp, png, size) {
     if (!allowedOpaque.has(color)) invalidOpaque += 1;
   }
 
-  if (transparent === 0 || partial === 0 || opaque === 0) {
-    throw new Error('Preview must contain transparent, partially transparent, and opaque pixels.');
+  if (transparent === 0 || opaque === 0) {
+    throw new Error('Preview must contain transparent and opaque pixels.');
   }
   if (invalidOpaque > 0) {
     throw new Error(`Preview contains ${invalidOpaque} fully opaque pixels outside the approved inks.`);
