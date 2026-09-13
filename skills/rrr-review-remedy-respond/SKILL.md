@@ -23,7 +23,7 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Run `gh auth status` before reading or writing GitHub data. If authentication or access is missing, ask the user to authenticate and stop.
    - Use the recently referenced PR when the conversation gives one.
    - Otherwise use the PR for the current branch with local git context and `gh pr view --json number,url,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository,baseRefName,state`.
-   - If the active PR cannot be identified safely, ask for the PR URL or number.
+   - If the active PR cannot be identified safely or its state is not OPEN, stop before editing, pushing, replying, or resolving and ask for an open PR.
    - Before editing, verify that the checked-out branch and its push remote correspond to the selected PR's head repository, owner, ref, and OID. If the checkout is detached, points at the base repository branch, or maps to another remote, stop before committing and ask how to proceed.
 
 2. Refresh local PR context.
