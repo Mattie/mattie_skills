@@ -186,6 +186,18 @@ test('same source repeated across queries is deduplicated while matches survive'
   assert.equal(result.candidates[0].observations.length, 1);
 });
 
+test('PayAI keyword matching normalizes malformed optional display fields', async () => {
+  const payload = structuredClone(fixture.payai);
+  payload.items[0].serviceName = { toString: null, valueOf: null };
+  payload.items[0].description = { toString: null, valueOf: null };
+  payload.items[0].tags = [{ toString: null, valueOf: null }, 'safe-tag'];
+  const result = await discover(parseArgs(['--catalog', 'payai', 'safe-tag']), transport(() => response(payload)));
+  assert.equal(result.candidates.length, 1);
+  assert.equal(result.candidates[0].observations[0].name, payload.items[0].resource);
+  assert.equal(result.candidates[0].observations[0].description, null);
+  assert.deepEqual(result.candidates[0].observations[0].tags, ['safe-tag']);
+});
+
 test('pathologically deep observations are isolated during deduplication', () => {
   const nested = {};
   let cursor = nested;

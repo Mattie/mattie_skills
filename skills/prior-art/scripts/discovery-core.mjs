@@ -80,13 +80,19 @@ export function resourceObservation(catalog, resource, retrievedAt) {
   const resourceId = resource.resource.trim();
   if (!resourceId) return null;
   const bazaar = resource.extensions?.bazaar;
+  const serviceName = typeof resource.serviceName === 'string' && resource.serviceName.trim()
+    ? resource.serviceName : resourceId;
+  const description = typeof resource.description === 'string' ? resource.description
+    : (typeof resource.metadata?.description === 'string' ? resource.metadata.description : null);
+  const tags = Array.isArray(resource.tags)
+    ? resource.tags.filter((tag) => typeof tag === 'string') : null;
   return serializableObservation({
     identity: `resource:${resourceId}`,
     catalog, sourceId: resourceId, retrievedAt,
-    name: resource.serviceName ?? resourceId,
+    name: serviceName,
     kind: 'service', endpoint: resourceId,
-    description: resource.description ?? resource.metadata?.description ?? null,
-    tags: resource.tags ?? null,
+    description,
+    tags: tags?.length ? tags : null,
     input: resource.inputSchema ?? bazaar?.info?.input ?? null,
     output: resource.outputSchema ?? bazaar?.info?.output ?? null,
     schema: bazaar?.schema ?? null,
