@@ -20,6 +20,17 @@ const WHITE = { hex: '#FFFFFF', rgb: [255, 255, 255] };
 const TRACE_PALETTE = [WHITE, ...INKS];
 const REVIEW_ALIASES = ['ash', 'birch', 'cedar', 'dune', 'ember', 'flint'];
 const REQUIRED_PREVIEW_SIZES = [192, 48];
+const COMPILER_OUTPUT_NAMES = [
+  'source-sheet.png',
+  'tiles',
+  'svg',
+  'previews',
+  'contact-sheets',
+  'anonymous-review',
+  'review-map.json',
+  'validation.json',
+];
+let activeOutputRoot = null;
 
 const VECTOR_SETTINGS = {
   preset: 'poster',
@@ -118,6 +129,13 @@ async function prepareEmptyDirectory(directory) {
     if (error?.code !== 'ENOENT') throw error;
   }
   await fs.mkdir(directory, { recursive: true });
+}
+
+/** Remove only artifacts owned by a failed compiler invocation. */
+async function cleanCompilerOutput(directory) {
+  await Promise.allSettled(COMPILER_OUTPUT_NAMES.map((name) =>
+    fs.rm(path.join(directory, name), { recursive: true, force: true }),
+  ));
 }
 
 /** Return a lowercase SHA-256 checksum for a buffer. */
@@ -367,6 +385,7 @@ async function main() {
   await fs.access(inputPath);
   if (articlePath) await fs.access(articlePath);
   await prepareEmptyDirectory(outputRoot);
+  activeOutputRoot = outputRoot;
 
   const { sharp, vtracer, Resvg } = loadDependencies(depsRoot);
   const sourceSheetPath = path.join(outputRoot, 'source-sheet.png');
@@ -502,6 +521,7 @@ async function main() {
   };
   const validationPath = path.join(outputRoot, 'validation.json');
   await writeJson(validationPath, validation);
+  activeOutputRoot = null;
 
   process.stdout.write(
     `${JSON.stringify({
@@ -516,7 +536,11 @@ async function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((error) => {
+  main().catch(async (error) => {
+    if (activeOutputRoot) {
+      await cleanCompilerOutput(activeOutputRoot);
+      activeOutputRoot = null;
+    }
     process.stderr.write(`aiconographer: ${error instanceof Error ? error.message : String(error)}\n`);
     process.exitCode = 1;
   });

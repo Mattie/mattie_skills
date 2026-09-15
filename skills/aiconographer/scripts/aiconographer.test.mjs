@@ -12,6 +12,7 @@ import { normalizeTile, positiveInteger, previewSizes, validatePreview } from '.
 import { writeSelectionExclusive } from './finalize-winner.mjs';
 
 const finalizer = fileURLToPath(new URL('./finalize-winner.mjs', import.meta.url));
+const processor = fileURLToPath(new URL('./process-sheet.mjs', import.meta.url));
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 
 test('integer and preview-size parsing rejects partial tokens and keeps judging sizes', () => {
@@ -72,6 +73,28 @@ test('selection write failure removes a partially created selection file', async
       /simulated disk full/,
     );
     await assert.rejects(fs.access(selectionPath));
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test('compilation failure leaves its output directory empty for retry', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-compile-'));
+  const source = path.join(root, 'invalid-sheet.png');
+  const output = path.join(root, 'output');
+  try {
+    await sharp({
+      create: { width: 10, height: 10, channels: 3, background: '#FFFFFF' },
+    }).png().toFile(source);
+    const result = spawnSync(process.execPath, [
+      processor,
+      '--input', source,
+      '--output', output,
+      '--deps-root', path.dirname(processor),
+    ], { encoding: 'utf8' });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /do not divide/);
+    assert.deepEqual(await fs.readdir(output), []);
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }
