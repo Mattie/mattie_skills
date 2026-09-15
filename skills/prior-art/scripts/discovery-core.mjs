@@ -8,6 +8,17 @@ export const ROUTES = Object.freeze({
 export const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const valueOrNull = value => value ?? null;
 
+/** Reject JSON observations whose nesting cannot be serialized safely downstream. */
+function serializableObservation(observation) {
+  try {
+    JSON.stringify(observation);
+    return observation;
+  } catch (error) {
+    if (error instanceof RangeError) return null;
+    throw error;
+  }
+}
+
 /** Fetch only a fixed discovery route. Enforce a deadline through body consumption. */
 export async function readCatalog(catalog, params, context) {
   const url = new URL(ROUTES[catalog]);
@@ -69,7 +80,7 @@ export function resourceObservation(catalog, resource, retrievedAt) {
   const resourceId = resource.resource.trim();
   if (!resourceId) return null;
   const bazaar = resource.extensions?.bazaar;
-  return {
+  return serializableObservation({
     identity: `resource:${resourceId}`,
     catalog, sourceId: resourceId, retrievedAt,
     name: resource.serviceName ?? resourceId,
@@ -84,7 +95,7 @@ export function resourceObservation(catalog, resource, retrievedAt) {
     activity: isObject(resource.quality) ? resource.quality : null,
     updatedAt: valueOrNull(resource.lastUpdated),
     packages: null, remotes: null, version: null,
-  };
+  });
 }
 
 /** Preserve registry package and remote identities; a registry listing is not fulfillment proof. */
@@ -96,7 +107,7 @@ export function mcpObservation(entry, retrievedAt) {
   if (!name || !version) return null;
   const remotes = Array.isArray(server.remotes) ? server.remotes : null;
   const packages = Array.isArray(server.packages) ? server.packages : null;
-  return {
+  return serializableObservation({
     identity: `mcp:${name}@${version}`,
     catalog: 'mcp', sourceId: name, retrievedAt,
     name: server.title ?? name,
@@ -107,7 +118,7 @@ export function mcpObservation(entry, retrievedAt) {
     input: null, output: null, schema: null, method: null, paymentOptions: null,
     activity: null, updatedAt: entry._meta?.['io.modelcontextprotocol.registry/official']?.updatedAt ?? null,
     registryMetadata: entry._meta ?? null,
-  };
+  });
 }
 
 /** Merge exact identities only, retaining independent and conflicting observations. */

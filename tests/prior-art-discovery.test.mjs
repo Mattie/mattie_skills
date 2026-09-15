@@ -202,6 +202,18 @@ test('pathologically deep observations are isolated during deduplication', () =>
   assert.deepEqual(candidates[0].observations, [{ identity: 'resource:example', paymentOptions: null }]);
 });
 
+test('deep catalog metadata is counted as skipped coverage before deduplication', async () => {
+  const depth = 20_000;
+  const nested = `${'{"child":'.repeat(depth)}null${'}'.repeat(depth)}`;
+  const body = `{"partialResults":false,"resources":[{"resource":"https://deep.example","serviceName":"Deep","description":"deep","accepts":[${nested}]}]}`;
+  const mock = transport(() => new Response(body, { headers: { 'content-type': 'application/json' } }));
+  const result = await discover(parseArgs(['--catalog', 'coinbase', 'deep']), mock);
+  assert.equal(result.candidates.length, 0);
+  assert.equal(result.catalogs[0].queries[0].returned, 0);
+  assert.equal(result.catalogs[0].queries[0].skipped, 1);
+  assert.equal(result.catalogs[0].status, 'partial');
+});
+
 test('untrusted terminal control characters are quoted in text output', async () => {
   const payload = structuredClone(fixture.coinbase);
   payload.resources[0].description = '\u001b[2J';
