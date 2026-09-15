@@ -1,0 +1,7 @@
+interface:
+  display_name: "Write Humanly"
+  short_description: "Human-sounding prose with a distinct authorial voice"
+  default_prompt: "Use $write-humanly to revise this prose so it sounds like a particular human wrote it for a reason."
+
+policy:
+  allow_implicit_invocation: true
