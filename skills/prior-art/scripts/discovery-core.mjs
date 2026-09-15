@@ -115,15 +115,21 @@ export function deduplicate(observations) {
   const candidates = new Map();
   const observationKeys = new Map();
   for (const observation of observations) {
+    const { query, ...evidence } = observation;
+    let evidenceKey;
+    try {
+      evidenceKey = JSON.stringify(evidence);
+    } catch (error) {
+      if (error instanceof RangeError) continue;
+      throw error;
+    }
     let candidate = candidates.get(observation.identity);
     if (!candidate) {
       candidate = { identity: observation.identity, matchedQueries: [], observations: [] };
       candidates.set(observation.identity, candidate);
       observationKeys.set(observation.identity, new Set());
     }
-    if (!candidate.matchedQueries.includes(observation.query)) candidate.matchedQueries.push(observation.query);
-    const { query, ...evidence } = observation;
-    const evidenceKey = JSON.stringify(evidence);
+    if (!candidate.matchedQueries.includes(query)) candidate.matchedQueries.push(query);
     if (!observationKeys.get(observation.identity).has(evidenceKey)) {
       observationKeys.get(observation.identity).add(evidenceKey);
       candidate.observations.push(evidence);

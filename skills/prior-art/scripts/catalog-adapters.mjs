@@ -56,6 +56,9 @@ export async function payai(options, context) {
       const payload = await readCatalog('payai', { type: 'http', limit: 100, offset }, context);
       if (!Array.isArray(payload.items) || !isObject(payload.pagination) ||
           !Number.isInteger(payload.pagination.total) || payload.pagination.total < 0) throw new Error('Invalid PayAI items/pagination');
+      if (!Number.isInteger(payload.pagination.offset) || payload.pagination.offset !== offset) {
+        throw new Error(`PayAI pagination offset mismatch: requested ${offset}`);
+      }
       scan.pages++;
       scan.scanned += payload.items.length;
       scan.total = payload.pagination.total;

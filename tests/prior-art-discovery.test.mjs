@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 
 const root = process.env.PRIOR_ART_SKILL_ROOT ?? resolve('skills/prior-art');
 const { discover, parseArgs, formatText } = await import(pathToFileURL(resolve(root, 'scripts/discover-services.mjs')));
+const { deduplicate } = await import(pathToFileURL(resolve(root, 'scripts/discovery-core.mjs')));
 const fixture = JSON.parse(readFileSync(new URL('./fixtures/prior-art/catalogs.json', import.meta.url), 'utf8'));
 const response = payload => new Response(JSON.stringify(payload), { headers: { 'content-type': 'application/json' } });
 const routes = {
@@ -69,7 +70,10 @@ test('PayAI inventory is fetched once and query matching requires all tokens', a
 });
 
 test('PayAI bounded empty match never implies a complete inventory scan', async () => {
-  const mock = transport(() => response({ items: fixture.payai.items, pagination: { total: 1000 } }));
+  const mock = transport((name, url) => response({
+    items: fixture.payai.items,
+    pagination: { total: 1000, offset: Number(url.searchParams.get('offset')) },
+  }));
   const result = await discover(parseArgs(['--catalog', 'payai', '--max-pages', '1', 'absent']), mock);
   assert.equal(result.catalogs[0].status, 'partial');
   assert.equal(result.catalogs[0].queries[0].truncated, true);
@@ -78,7 +82,7 @@ test('PayAI bounded empty match never implies a complete inventory scan', async 
 
 test('PayAI paginates with actual item count and preserves earlier pages on failure', async () => {
   const mock = transport((name, url) => url.searchParams.get('offset') === '0'
-    ? response({ items: [fixture.payai.items[0]], pagination: { total: 2 } })
+    ? response({ items: [fixture.payai.items[0]], pagination: { total: 2, offset: 0 } })
     : new Response('', { status: 503 }));
   const result = await discover(parseArgs(['--catalog', 'payai', 'ocr']), mock);
   assert.equal(mock.calls[1].url.searchParams.get('offset'), '1');
@@ -182,6 +186,22 @@ test('same source repeated across queries is deduplicated while matches survive'
   assert.equal(result.candidates[0].observations.length, 1);
 });
 
+test('pathologically deep observations are isolated during deduplication', () => {
+  const nested = {};
+  let cursor = nested;
+  for (let depth = 0; depth < 20_000; depth++) {
+    cursor.child = {};
+    cursor = cursor.child;
+  }
+  const candidates = deduplicate([
+    { identity: 'resource:example', query: 'deep', paymentOptions: nested },
+    { identity: 'resource:example', query: 'valid', paymentOptions: null },
+  ]);
+  assert.equal(candidates.length, 1);
+  assert.deepEqual(candidates[0].matchedQueries, ['valid']);
+  assert.deepEqual(candidates[0].observations, [{ identity: 'resource:example', paymentOptions: null }]);
+});
+
 test('untrusted terminal control characters are quoted in text output', async () => {
   const payload = structuredClone(fixture.coinbase);
   payload.resources[0].description = '\u001b[2J';
@@ -243,20 +263,32 @@ test('duplicate Coinbase identities count once while preserving observations', a
 });
 
 test('PayAI exhausting the inventory clears bounded scan coverage and advances offsets', async () => {
-  const mock = transport((name, url) => response({
-    items: [fixture.payai.items[Number(url.searchParams.get('offset'))]], pagination: { total: 3 },
-  }));
+  const mock = transport((name, url) => {
+    const offset = Number(url.searchParams.get('offset'));
+    return response({ items: [fixture.payai.items[offset]], pagination: { total: 3, offset } });
+  });
   const result = await discover(parseArgs(['--catalog', 'payai', 'ocr']), mock);
   assert.deepEqual(mock.calls.map(call => call.url.searchParams.get('offset')), ['0', '1', '2']);
   assert.equal(result.catalogs[0].queries[0].truncated, false);
   assert.equal(result.catalogs[0].status, 'ok');
 });
 
+test('PayAI rejects a repeated stale page before claiming complete coverage', async () => {
+  const mock = transport(() => response({
+    items: [fixture.payai.items[0]], pagination: { total: 2, offset: 0 },
+  }));
+  const result = await discover(parseArgs(['--catalog', 'payai', 'absent']), mock);
+  assert.deepEqual(mock.calls.map(call => call.url.searchParams.get('offset')), ['0', '1']);
+  assert.equal(result.catalogs[0].status, 'partial');
+  assert.equal(result.catalogs[0].queries[0].truncated, true);
+  assert.match(result.catalogs[0].queries[0].errors[0], /offset mismatch/);
+});
+
 test('oversized bodies and malformed pagination are reported without unbounded reads', async () => {
   const tooLarge = transport(() => new Response('x'.repeat(8 * 1024 * 1024 + 1)));
   const result = await discover(parseArgs(['--catalog', 'coinbase', 'ocr']), tooLarge);
   assert.match(result.catalogs[0].queries[0].errors[0], /8 MiB/);
-  const noProgress = transport(() => response({ items: [], pagination: { total: 10 } }));
+  const noProgress = transport(() => response({ items: [], pagination: { total: 10, offset: 0 } }));
   const stalled = await discover(parseArgs(['--catalog', 'payai', 'ocr']), noProgress);
   assert.equal(noProgress.calls.length, 1);
   assert.match(stalled.catalogs[0].queries[0].errors[0], /no progress/);
