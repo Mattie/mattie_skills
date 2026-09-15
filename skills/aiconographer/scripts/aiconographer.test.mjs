@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 import { normalizeTile, positiveInteger, previewSizes, validatePreview } from './process-sheet.mjs';
-import { writeSelectionExclusive } from './finalize-winner.mjs';
+import { copyExclusive, writeSelectionExclusive } from './finalize-winner.mjs';
 
 const finalizer = fileURLToPath(new URL('./finalize-winner.mjs', import.meta.url));
 const processor = fileURLToPath(new URL('./process-sheet.mjs', import.meta.url));
@@ -73,6 +73,25 @@ test('selection write failure removes a partially created selection file', async
       /simulated disk full/,
     );
     await assert.rejects(fs.access(selectionPath));
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test('post-copy metadata failure removes the untracked destination', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-copy-'));
+  const source = path.join(root, 'source.svg');
+  const destination = path.join(root, 'destination.svg');
+  const failingFs = {
+    copyFile: fs.copyFile.bind(fs),
+    stat: async () => { throw new Error('simulated stat failure'); },
+    readFile: fs.readFile.bind(fs),
+    unlink: fs.unlink.bind(fs),
+  };
+  try {
+    await fs.writeFile(source, '<svg/>');
+    await assert.rejects(copyExclusive(failingFs, source, destination), /simulated stat failure/);
+    await assert.rejects(fs.access(destination));
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }

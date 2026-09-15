@@ -47,19 +47,24 @@ function required(args, name) {
 }
 
 /** Return a lowercase SHA-256 checksum for a file. */
-async function fileSha256(filePath) {
-  const data = await fs.readFile(filePath);
+async function fileSha256(filePath, fsApi = fs) {
+  const data = await fsApi.readFile(filePath);
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
 /** Copy a file only when the destination does not already exist. */
-async function copyExclusive(source, destination) {
-  await fs.copyFile(source, destination, constants.COPYFILE_EXCL);
-  return {
-    path: destination,
-    bytes: (await fs.stat(destination)).size,
-    sha256: await fileSha256(destination),
-  };
+export async function copyExclusive(fsApi, source, destination) {
+  await fsApi.copyFile(source, destination, constants.COPYFILE_EXCL);
+  try {
+    return {
+      path: destination,
+      bytes: (await fsApi.stat(destination)).size,
+      sha256: await fileSha256(destination, fsApi),
+    };
+  } catch (error) {
+    await fsApi.unlink(destination).catch(() => {});
+    throw error;
+  }
 }
 
 /** Refuse an existing destination before any canonical copy begins. */
@@ -146,7 +151,7 @@ async function main() {
   const created = [];
   try {
     for (const transfer of transfers) {
-      const copied = await copyExclusive(transfer.source, transfer.destination);
+      const copied = await copyExclusive(fs, transfer.source, transfer.destination);
       created.push(transfer.destination);
       if (transfer.kind === 'svg') canonical.svg = copied;
       else canonical.previews[transfer.size] = copied;
