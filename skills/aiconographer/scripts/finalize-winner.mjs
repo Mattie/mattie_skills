@@ -10,6 +10,7 @@ import { constants } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const HELP = `
 Usage:
@@ -83,6 +84,16 @@ async function verifySource(source, expectedSha256) {
   }
 }
 
+/** Write selection metadata exclusively and remove a partial file after write failure. */
+export async function writeSelectionExclusive(fsApi, selectionPath, contents) {
+  try {
+    await fsApi.writeFile(selectionPath, contents, { encoding: 'utf8', flag: 'wx' });
+  } catch (error) {
+    if (error?.code !== 'EEXIST') await fsApi.unlink(selectionPath).catch(() => {});
+    throw error;
+  }
+}
+
 /** Finalize the selected candidate and write auditable selection metadata. */
 async function main() {
   const args = parseArgs(process.argv.slice(2));
@@ -142,10 +153,7 @@ async function main() {
     }
 
     const selection = { candidate, slug, canonical, candidateValidation };
-    await fs.writeFile(selectionPath, `${JSON.stringify(selection, null, 2)}\n`, {
-      encoding: 'utf8',
-      flag: 'wx',
-    });
+    await writeSelectionExclusive(fs, selectionPath, `${JSON.stringify(selection, null, 2)}\n`);
   } catch (error) {
     await Promise.allSettled(created.reverse().map((destination) => fs.unlink(destination)));
     throw error;
@@ -156,7 +164,9 @@ async function main() {
   );
 }
 
-main().catch((error) => {
-  process.stderr.write(`aiconographer: ${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    process.stderr.write(`aiconographer: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  });
+}

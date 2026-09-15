@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 import { normalizeTile, positiveInteger, previewSizes, validatePreview } from './process-sheet.mjs';
+import { writeSelectionExclusive } from './finalize-winner.mjs';
 
 const finalizer = fileURLToPath(new URL('./finalize-winner.mjs', import.meta.url));
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
@@ -51,6 +52,29 @@ test('preview validation accepts pixel-aligned art without partially transparent
   assert.equal(validation.partial, 0);
   assert.equal(validation.transparent, 2);
   assert.equal(validation.opaque, 2);
+});
+
+test('selection write failure removes a partially created selection file', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-selection-'));
+  const selectionPath = path.join(root, 'selection.json');
+  const failingFs = {
+    writeFile: async (destination, contents, options) => {
+      await fs.writeFile(destination, contents.slice(0, 8), options);
+      const error = new Error('simulated disk full');
+      error.code = 'ENOSPC';
+      throw error;
+    },
+    unlink: fs.unlink.bind(fs),
+  };
+  try {
+    await assert.rejects(
+      writeSelectionExclusive(failingFs, selectionPath, '{"candidate":"c1"}\n'),
+      /simulated disk full/,
+    );
+    await assert.rejects(fs.access(selectionPath));
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
 });
 
 async function createRun(root, { alteredSvg = false, lateConflict = false } = {}) {
