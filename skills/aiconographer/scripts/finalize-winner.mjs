@@ -52,15 +52,19 @@ async function fileSha256(filePath, fsApi = fs) {
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
-/** Copy a file only when the destination does not already exist. */
-export async function copyExclusive(fsApi, source, destination) {
+/** Copy a validated file exclusively and remove it if the copied bytes changed. */
+export async function copyExclusive(fsApi, source, destination, expectedSha256) {
   await fsApi.copyFile(source, destination, constants.COPYFILE_EXCL);
   try {
-    return {
+    const copied = {
       path: destination,
       bytes: (await fsApi.stat(destination)).size,
       sha256: await fileSha256(destination, fsApi),
     };
+    if (expectedSha256 !== undefined && copied.sha256 !== expectedSha256) {
+      throw new Error(`Validated source changed while copying: ${source}`);
+    }
+    return copied;
   } catch (error) {
     await fsApi.unlink(destination).catch(() => {});
     throw error;
@@ -151,7 +155,12 @@ async function main() {
   const created = [];
   try {
     for (const transfer of transfers) {
-      const copied = await copyExclusive(fs, transfer.source, transfer.destination);
+      const copied = await copyExclusive(
+        fs,
+        transfer.source,
+        transfer.destination,
+        transfer.expectedSha256,
+      );
       created.push(transfer.destination);
       if (transfer.kind === 'svg') canonical.svg = copied;
       else canonical.previews[transfer.size] = copied;

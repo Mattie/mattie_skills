@@ -116,6 +116,33 @@ test('post-copy metadata failure removes the untracked destination', async () =>
   }
 });
 
+test('copy hash mismatch removes the changed canonical artifact', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-copy-hash-'));
+  const source = path.join(root, 'source.svg');
+  const destination = path.join(root, 'destination.svg');
+  const original = Buffer.from('<svg/>');
+  const changed = Buffer.from('<svg><path/></svg>');
+  const changingFs = {
+    copyFile: async (from, to, flags) => {
+      await fs.writeFile(from, changed);
+      await fs.copyFile(from, to, flags);
+    },
+    stat: fs.stat.bind(fs),
+    readFile: fs.readFile.bind(fs),
+    unlink: fs.unlink.bind(fs),
+  };
+  try {
+    await fs.writeFile(source, original);
+    await assert.rejects(
+      copyExclusive(changingFs, source, destination, sha256(original)),
+      /changed while copying/,
+    );
+    await assert.rejects(fs.access(destination));
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
 test('compilation failure leaves its output directory empty for retry', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-compile-'));
   const source = path.join(root, 'invalid-sheet.png');
