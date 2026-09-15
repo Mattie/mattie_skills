@@ -1,0 +1,4 @@
+interface:
+  display_name: "Goal Check"
+  short_description: "Summarize the thread goal and immediate next step"
+  default_prompt: "Use $goal-check to give me a concise goal reminder for this task."
