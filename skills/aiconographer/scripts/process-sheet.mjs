@@ -18,6 +18,7 @@ const INKS = [
 ];
 const WHITE = { hex: '#FFFFFF', rgb: [255, 255, 255] };
 const TRACE_PALETTE = [WHITE, ...INKS];
+const CORAL_RED_DOMINANCE_THRESHOLD = 12;
 const REVIEW_ALIASES = ['ash', 'birch', 'cedar', 'dune', 'ember', 'flint'];
 const REQUIRED_PREVIEW_SIZES = [192, 48];
 const COMPILER_OUTPUT_NAMES = [
@@ -177,22 +178,23 @@ export async function normalizeTile(sharp, sourcePath, region) {
     const red = data[offset];
     const green = data[offset + 1];
     const blue = data[offset + 2];
-    let bestIndex = 0;
+    const palette = red - Math.max(green, blue) >= CORAL_RED_DOMINANCE_THRESHOLD
+      ? TRACE_PALETTE : [WHITE, INKS[0]];
+    let selected = palette[0];
     let bestDistance = Number.POSITIVE_INFINITY;
 
-    for (let index = 0; index < TRACE_PALETTE.length; index += 1) {
-      const [targetRed, targetGreen, targetBlue] = TRACE_PALETTE[index].rgb;
+    for (const entry of palette) {
+      const [targetRed, targetGreen, targetBlue] = entry.rgb;
       const distance =
         (red - targetRed) ** 2 +
         (green - targetGreen) ** 2 +
         (blue - targetBlue) ** 2;
       if (distance < bestDistance) {
         bestDistance = distance;
-        bestIndex = index;
+        selected = entry;
       }
     }
 
-    const selected = TRACE_PALETTE[bestIndex];
     output[offset] = selected.rgb[0];
     output[offset + 1] = selected.rgb[1];
     output[offset + 2] = selected.rgb[2];

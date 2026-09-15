@@ -55,6 +55,25 @@ test('preview validation accepts pixel-aligned art without partially transparent
   assert.equal(validation.opaque, 2);
 });
 
+test('tile normalization does not invent coral from neutral antialias pixels', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-neutral-'));
+  try {
+    const source = path.join(root, 'antialias.png');
+    await sharp(Buffer.from([
+      150, 150, 149,
+      247, 124, 106,
+    ]), {
+      raw: { width: 2, height: 1, channels: 3 },
+    }).png().toFile(source);
+    const normalized = await normalizeTile(sharp, source, { left: 0, top: 0, width: 2, height: 1 });
+    assert.equal(normalized.counts['#FFFFFF'], 1);
+    assert.equal(normalized.counts['#2C2C2B'], 0);
+    assert.equal(normalized.counts['#F45138'], 1);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
 test('selection write failure removes a partially created selection file', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-selection-'));
   const selectionPath = path.join(root, 'selection.json');
