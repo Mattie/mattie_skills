@@ -42,11 +42,17 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Before fetching, verify that the checkout is attached and its branch and push remote map to the
      selected PR's head host, repository, owner, and ref. If the checkout is detached, points at the
      base repository branch, or maps to another remote, stop before editing and ask how to proceed.
+   - Enumerate the branch remote's push URLs and select exactly one URL that matches the verified PR
+     head host and repository. Stop if there is no unique authorized push URL; later pushes must use
+     that URL directly rather than the remote name.
 
 2. Refresh local PR context.
    - Run `git status --short --branch` and note uncommitted or untracked work.
+   - If the index already contains unrelated staged changes, stop and ask how to preserve them before
+     editing. Do not unstage them or allow them into an RRR commit.
    - Fetch and prune only the verified PR head remote. Fetch a separately verified base remote only
-     when base comparison requires it. Do not use `git fetch --all` or contact unrelated remotes.
+     when base comparison requires it. Pass `--recurse-submodules=no` to each fetch. Do not use
+     `git fetch --all` or contact unrelated remotes.
    - Check whether the remote PR branch or base branch advanced since the earlier PR context. A
      clean branch that is strictly behind its verified PR remote may be fast-forwarded with
      `--ff-only`. If it is ahead, diverged, or has local commits absent from the PR head, stop and
@@ -90,7 +96,7 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Immediately before pushing, re-read the selected PR state and stop if it is no longer OPEN.
    - After verification succeeds or after clearly documented best-effort verification, push only
      with the verified destination:
-     `git push --no-follow-tags --recurse-submodules=no <verified-head-remote> HEAD:refs/heads/<verified-head-ref>`.
+     `git push --no-follow-tags --recurse-submodules=no <verified-head-push-url> HEAD:refs/heads/<verified-head-ref>`.
 
 8. Respond and resolve.
    - Immediately before any GitHub reply or resolution, re-read the selected PR state and stop if
