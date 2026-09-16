@@ -37,12 +37,16 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Once the base repository is known, use
      `gh pr view --repo <pr-host>/<base-owner>/<base-repo> --json number,url,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository,baseRefName,state`.
    - If the active PR cannot be identified safely or its state is not OPEN, stop before editing, pushing, replying, or resolving and ask for an open PR.
-   - Before editing, verify that the checked-out branch and its push remote correspond to the selected PR's head repository, owner, ref, and OID. If the checkout is detached, points at the base repository branch, or maps to another remote, stop before committing and ask how to proceed.
+   - Before fetching, verify that the checkout is attached and its branch and push remote map to the
+     selected PR's head host, repository, owner, and ref. If the checkout is detached, points at the
+     base repository branch, or maps to another remote, stop before editing and ask how to proceed.
 
 2. Refresh local PR context.
    - Run `git status --short --branch` and note uncommitted or untracked work.
    - Run `git fetch --all --prune`.
    - Check whether the remote PR branch or base branch advanced since the earlier PR context. If the current branch is behind its remote, pull or rebase according to repo convention before reviewing.
+   - After synchronization, re-read the PR head OID and require the checked-out HEAD to match it
+     before reviewing or editing. If they still differ, stop and explain the local and remote state.
    - If local unrelated changes block syncing, stop and ask how to preserve them.
 
 3. Gather thread-aware review data.
