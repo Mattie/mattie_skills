@@ -14,15 +14,24 @@ Use this skill after we have pushed or are actively working on a PR and the user
 - Keep the PR focused. Fix real defects, regressions, contract mismatches, confusing code, missing tests, and reviewer concerns that materially improve the change.
 - Flag comments that are stale, duplicate, out of scope, already handled, or based on a misunderstanding. Explain them clearly in GitHub and in the final summary.
 - Preserve unrelated local work. Stage, commit, and push only the changes made for this RRR pass.
+- Scope every GitHub CLI operation to the verified PR host and repository. Use a host-qualified
+  `--repo <host>/<owner>/<repo>` for `gh pr` commands and `--hostname <host>` for every `gh api`
+  request, including GraphQL reads and mutations.
 - Think ahead before pushing. Check whether the remedy creates new reviewer concerns around naming, behavior, tests, edge cases, docs, or compatibility.
 - Keep an agent-private progress ledger containing the thread or comment ID, classification, decision, local change, verification, pushed commit, and reply or resolution state. Do not write the ledger into the repository or commit it unless the user explicitly asks.
 
 ## Workflow
 
 1. Identify the active PR.
-   - Run `gh auth status` before reading or writing GitHub data. If authentication or access is missing, ask the user to authenticate and stop.
+   - Determine the PR hostname and repository before reading or writing GitHub data. Prefer the
+     hostname and owner/repository from a recently referenced PR URL. Otherwise inspect the current
+     branch's push remote and parse its HTTPS or SSH host and repository.
+   - Run `gh auth status --active --hostname <pr-host>`. If authentication or access for that host
+     is missing, ask the user to authenticate and stop. Ignore authentication state on unrelated
+     hosts.
    - Use the recently referenced PR when the conversation gives one.
-   - Otherwise use the PR for the current branch with local git context and `gh pr view --json number,url,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository,baseRefName,state`.
+   - Otherwise use the PR for the current branch with local git context and
+     `gh pr view --repo <pr-host>/<owner>/<repo> --json number,url,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository,baseRefName,state`.
    - If the active PR cannot be identified safely or its state is not OPEN, stop before editing, pushing, replying, or resolving and ask for an open PR.
    - Before editing, verify that the checked-out branch and its push remote correspond to the selected PR's head repository, owner, ref, and OID. If the checkout is detached, points at the base repository branch, or maps to another remote, stop before committing and ask how to proceed.
 
@@ -34,7 +43,9 @@ Use this skill after we have pushed or are actively working on a PR and the user
 
 3. Gather thread-aware review data.
    - Prefer GitHub tooling that exposes review-thread state, including unresolved/resolved status, file anchors, outdated status, and replies.
-   - Use `gh api graphql` for review-thread state; use a bundled script only after inspecting it and confirming it is read-only and scoped to the selected PR.
+   - Use `gh api --hostname <pr-host> graphql` for review-thread state; use a bundled script only
+     after inspecting it and confirming it is read-only and scoped to the selected PR host and
+     repository.
    - Also fetch and paginate review bodies and PR conversation comments; actionable feedback may exist outside inline review threads.
    - Also inspect the current PR diff, check status, and relevant surrounding code before deciding whether a comment is valid.
 
@@ -65,6 +76,8 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Push the current PR branch after verification succeeds or after clearly documented best-effort verification.
 
 8. Respond and resolve.
+   - Send every reply and resolution through the selected PR host; for direct API calls, pass
+     `--hostname <pr-host>` explicitly.
    - After pushing, re-read the PR head OID and confirm that it contains the remedy commit. Do not claim a fix is available or resolve its thread until that check succeeds.
    - For fixed threads, reply with what changed and how it was verified, then resolve the thread when the platform allows it.
    - For explanation-only threads, reply with the reasoning and resolve only when the issue is clearly answered or stale.
