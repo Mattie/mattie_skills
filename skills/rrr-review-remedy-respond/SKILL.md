@@ -133,6 +133,10 @@ Use this skill after we have pushed or are actively working on a PR and the user
 8. Respond and resolve.
    - Immediately before any GitHub reply or resolution, re-read the selected PR state and stop if
      it is no longer OPEN.
+   - Also immediately before each reply or resolution, re-fetch that thread and fully paginate its
+     `comments` connection. Compare it with the classified snapshot; if its contents changed,
+     reclassify the thread before mutating it. Repeat this check separately for the reply and the
+     resolution so a reply added between those mutations is not missed.
    - Send every reply and resolution through the selected PR host; for direct API calls, pass
      `--hostname <pr-host>` explicitly.
    - After pushing, re-read the PR head OID together with that state check. If the head advanced,
