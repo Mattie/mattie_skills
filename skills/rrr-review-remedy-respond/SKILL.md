@@ -43,7 +43,8 @@ Use this skill after we have pushed or are actively working on a PR and the user
 
 2. Refresh local PR context.
    - Run `git status --short --branch` and note uncommitted or untracked work.
-   - Run `git fetch --all --prune`.
+   - Fetch and prune only the verified PR head remote. Fetch a separately verified base remote only
+     when base comparison requires it. Do not use `git fetch --all` or contact unrelated remotes.
    - Check whether the remote PR branch or base branch advanced since the earlier PR context. A
      clean branch that is strictly behind its verified PR remote may be fast-forwarded with
      `--ff-only`. If it is ahead, diverged, or has local commits absent from the PR head, stop and
