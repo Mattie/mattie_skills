@@ -1,0 +1,7 @@
+interface:
+  display_name: "RRR Review Remedy Respond"
+  short_description: "Handle active PR review comments"
+  default_prompt: "Use $rrr-review-remedy-respond to assess the active PR's review comments, apply and push verified fixes when needed, reply appropriately, and resolve clearly concluded threads."
+
+policy:
+  allow_implicit_invocation: false

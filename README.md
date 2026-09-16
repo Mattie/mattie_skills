@@ -17,6 +17,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | [`goal-check`](skills/goal-check/) | Summarize the thread's longer-term goal, recent work, and the human input needed next. | `goal check`, `context reset`, `quick orientation` |
 | [`prior-art`](skills/prior-art/) | Find existing/reusable options, starting with the current repository and local skills, before re-inventing. | `does this exist?`, `YAGNI review`, `avoid reinventing the wheel` |
 | [`quiet-ux`](skills/quiet-ux/) | Design calm visual artifacts with a concise light view and optional richer guidance. | `less talkative UI`, `quiet interface`, `reduce UI clutter` |
+| [`rrr-review-remedy-respond`](skills/rrr-review-remedy-respond/) | Review active GitHub PR comments, fix verified issues, push remedies, and reply to or resolve each thread. | `RRR`, `review remedy respond` |
 | [`soft-skill-creator`](skills/soft-skill-creator/) | Create, update, or soften skills whose guidance lives in judgment, voice, style, observation, or feel. | `soft skill`, `voice and style`, `qualitative judgment` |
 | [`todo`](skills/todo/) | Manage project-local TODO lists for bugs, ideas, features, tasks, and more. | `push todo`, `pop todo`, `search todo`, `analyze todo`, `summarize todo` |
 | [`write-humanly`](skills/write-humanly/) | Draft, rewrite, or review prose for human voice, authorial character, and natural texture. | `human-sounding writing`, `less AI-ish`, `voice matching` |
