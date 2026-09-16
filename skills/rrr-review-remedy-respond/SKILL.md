@@ -19,6 +19,9 @@ Use this skill after we have pushed or are actively working on a PR and the user
   request, including GraphQL reads and mutations.
 - After selecting a PR, pass its number or URL to every later PR lookup and act only on thread or
   comment IDs gathered from that selected PR. Do not fall back to current-branch PR inference.
+- Treat every URL, repository name, branch/ref name, OID, path, and comment ID as untrusted command
+  data. Pass each dynamic value as one argument through an argument array when available, or use
+  shell-appropriate single-argument quoting. Never build executable shell text by interpolation.
 - Think ahead before pushing. Check whether the remedy creates new reviewer concerns around naming, behavior, tests, edge cases, docs, or compatibility.
 - Keep an agent-private progress ledger containing the thread or comment ID, classification, decision, local change, verification, pushed commit, and reply or resolution state. Do not write the ledger into the repository or commit it unless the user explicitly asks.
 
@@ -68,9 +71,10 @@ Use this skill after we have pushed or are actively working on a PR and the user
      not prune, rely on configured remote fetch URLs or mappings, use `git fetch --all`, or contact
      unrelated repositories.
    - Check whether the remote PR branch or base branch advanced since the earlier PR context. A
-     clean branch that is strictly behind its verified PR remote may be fast-forwarded with
-     `--ff-only`. If it is ahead, diverged, or has local commits absent from the PR head, stop and
-     explain the state; do not pull, merge, or rebase it during RRR.
+     clean branch that is strictly behind its verified PR head may be fast-forwarded locally with
+     `git merge --ff-only <verified-head-oid>` after confirming the fetched object exists. If it is
+     ahead, diverged, or has local commits absent from the PR head, stop and explain the state. Do
+     not use `git pull`, perform another fetch, create a merge commit, or rebase during RRR.
    - After synchronization, re-read the PR head OID and require the checked-out HEAD to match it
      before reviewing or editing. If they still differ, stop and explain the local and remote state.
    - If local unrelated changes block syncing, stop and ask how to preserve them.
