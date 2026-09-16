@@ -12,6 +12,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 
 | Skill | Description | Alternate labels |
 | --- | --- | --- |
+| [`aiconographer`](skills/aiconographer/) | Generate, compile, and select consistent two-color lore article icons. | `article icon`, `lore icon`, `icon candidates` |
 | [`ask-socrates`](skills/ask-socrates/) | Turn an article, situation, decision, or problem into one frame and three questions chosen from Socratic and Platonic thought tools. | `Socratic lens`, `think like Socrates`, `three questions` |
 | [`goal-check`](skills/goal-check/) | Summarize the thread's longer-term goal, recent work, and the human input needed next. | `goal check`, `context reset`, `quick orientation` |
 | [`prior-art`](skills/prior-art/) | Find existing/reusable options, starting with the current repository and local skills, before re-inventing. | `does this exist?`, `YAGNI review`, `avoid reinventing the wheel` |
