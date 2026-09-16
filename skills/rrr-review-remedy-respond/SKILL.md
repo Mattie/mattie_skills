@@ -17,6 +17,8 @@ Use this skill after we have pushed or are actively working on a PR and the user
 - Scope every GitHub CLI operation to the verified PR host and repository. Use a host-qualified
   `--repo <host>/<owner>/<repo>` for `gh pr` commands and `--hostname <host>` for every `gh api`
   request, including GraphQL reads and mutations.
+- After selecting a PR, pass its number or URL to every later PR lookup and act only on thread or
+  comment IDs gathered from that selected PR. Do not fall back to current-branch PR inference.
 - Think ahead before pushing. Check whether the remedy creates new reviewer concerns around naming, behavior, tests, edge cases, docs, or compatibility.
 - Keep an agent-private progress ledger containing the thread or comment ID, classification, decision, local change, verification, pushed commit, and reply or resolution state. Do not write the ledger into the repository or commit it unless the user explicitly asks.
 
@@ -35,7 +37,7 @@ Use this skill after we have pushed or are actively working on a PR and the user
      repositories and identify the unique OPEN PR whose head owner and ref match. Do not assume the
      push repository owns the PR; fork PRs belong to the base repository.
    - Once the base repository is known, use
-     `gh pr view --repo <pr-host>/<base-owner>/<base-repo> --json number,url,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository,baseRefName,state`.
+     `gh pr view <selected-pr-number> --repo <pr-host>/<base-owner>/<base-repo> --json number,url,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository,baseRefName,state`.
    - If the active PR cannot be identified safely or its state is not OPEN, stop before editing, pushing, replying, or resolving and ask for an open PR.
    - Before fetching, verify that the checkout is attached and its branch and push remote map to the
      selected PR's head host, repository, owner, and ref. If the checkout is detached, points at the
@@ -86,7 +88,9 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Stage only RRR changes.
    - Use a direct commit message such as `Address PR review comments`.
    - Immediately before pushing, re-read the selected PR state and stop if it is no longer OPEN.
-   - Push the current PR branch after verification succeeds or after clearly documented best-effort verification.
+   - After verification succeeds or after clearly documented best-effort verification, push only
+     with the verified destination:
+     `git push <verified-head-remote> HEAD:refs/heads/<verified-head-ref>`.
 
 8. Respond and resolve.
    - Immediately before any GitHub reply or resolution, re-read the selected PR state and stop if
