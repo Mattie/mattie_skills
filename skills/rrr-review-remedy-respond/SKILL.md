@@ -23,15 +23,19 @@ Use this skill after we have pushed or are actively working on a PR and the user
 ## Workflow
 
 1. Identify the active PR.
-   - Determine the PR hostname and repository before reading or writing GitHub data. Prefer the
-     hostname and owner/repository from a recently referenced PR URL. Otherwise inspect the current
-     branch's push remote and parse its HTTPS or SSH host and repository.
+   - Determine the candidate GitHub hostname before reading or writing GitHub data. Prefer the
+     hostname from a recently referenced PR URL. Otherwise inspect the current branch's push remote
+     and parse its HTTPS or SSH hostname.
    - Run `gh auth status --active --hostname <pr-host>`. If authentication or access for that host
      is missing, ask the user to authenticate and stop. Ignore authentication state on unrelated
      hosts.
    - Use the recently referenced PR when the conversation gives one.
-   - Otherwise use the PR for the current branch with local git context and
-     `gh pr view --repo <pr-host>/<owner>/<repo> --json number,url,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository,baseRefName,state`.
+   - Otherwise derive the head owner, repository, and ref from the checked-out branch and its push
+     remote. Inspect same-host remotes, including any upstream remote, for candidate base
+     repositories and identify the unique OPEN PR whose head owner and ref match. Do not assume the
+     push repository owns the PR; fork PRs belong to the base repository.
+   - Once the base repository is known, use
+     `gh pr view --repo <pr-host>/<base-owner>/<base-repo> --json number,url,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository,baseRefName,state`.
    - If the active PR cannot be identified safely or its state is not OPEN, stop before editing, pushing, replying, or resolving and ask for an open PR.
    - Before editing, verify that the checked-out branch and its push remote correspond to the selected PR's head repository, owner, ref, and OID. If the checkout is detached, points at the base repository branch, or maps to another remote, stop before committing and ask how to proceed.
 
