@@ -90,7 +90,7 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Immediately before pushing, re-read the selected PR state and stop if it is no longer OPEN.
    - After verification succeeds or after clearly documented best-effort verification, push only
      with the verified destination:
-     `git push <verified-head-remote> HEAD:refs/heads/<verified-head-ref>`.
+     `git push --no-follow-tags <verified-head-remote> HEAD:refs/heads/<verified-head-ref>`.
 
 8. Respond and resolve.
    - Immediately before any GitHub reply or resolution, re-read the selected PR state and stop if
