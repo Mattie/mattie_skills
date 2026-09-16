@@ -45,6 +45,10 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Enumerate the branch remote's push URLs and select exactly one URL that matches the verified PR
      head host and repository. Stop if there is no unique authorized repository URL; later fetches
      and pushes must use that URL directly rather than the remote name.
+   - Inspect effective `url.*.insteadOf` and `url.*.pushInsteadOf` Git configuration for rules that
+     apply to the verified URL. Resolve the final fetch and push destinations separately and require
+     both to remain on the selected PR head host and repository; stop if either is ambiguous or
+     redirects elsewhere.
 
 2. Refresh local PR context.
    - Run `git status --short --branch` and note uncommitted or untracked work.
