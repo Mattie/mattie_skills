@@ -107,13 +107,14 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - If the pass requires only replies or classifications, skip the commit and push and continue to the response step.
    - Stage only RRR changes.
    - Use a direct commit message such as `Address PR review comments`.
-   - Immediately before pushing, re-read the selected PR state and head OID. Stop if the PR is no
-     longer OPEN or the remote head differs from the OID on which the remedy was based. Confirm with
-     `git merge-base --is-ancestor <expected-head-oid> HEAD` that the remedy is a fast-forward of
-     that exact remote head.
+   - Record the immutable remedy commit OID. Immediately before pushing, re-read the selected PR
+     state and head OID. Stop if the PR is no longer OPEN or the remote head differs from the OID on
+     which the remedy was based. Confirm with
+     `git merge-base --is-ancestor <expected-head-oid> <remedy-commit-oid>` that the exact remedy
+     commit is a fast-forward of that remote head.
    - After verification succeeds or after clearly documented best-effort verification, push only
      with the verified destination:
-     `git push --no-follow-tags --recurse-submodules=no --force-with-lease=refs/heads/<verified-head-ref>:<expected-head-oid> <verified-head-url> HEAD:refs/heads/<verified-head-ref>`.
+     `git push --no-follow-tags --recurse-submodules=no --force-with-lease=refs/heads/<verified-head-ref>:<expected-head-oid> <verified-head-url> <remedy-commit-oid>:refs/heads/<verified-head-ref>`.
      The lease is only a compare-and-swap guard against a concurrent remote change; the required
      ancestry check forbids using it for a non-fast-forward rewrite.
 
@@ -122,9 +123,9 @@ Use this skill after we have pushed or are actively working on a PR and the user
      it is no longer OPEN.
    - Send every reply and resolution through the selected PR host; for direct API calls, pass
      `--hostname <pr-host>` explicitly.
-   - After pushing, re-read the PR head OID together with that state check and confirm that it
-     contains the remedy commit. Do not claim a fix is available or resolve its thread until that
-     check succeeds.
+   - After pushing, re-read the PR head OID together with that state check and confirm that it equals
+     the immutable remedy commit OID. Do not claim a fix is available or resolve its thread until
+     that check succeeds.
    - For fixed threads, reply with what changed and how it was verified, then resolve the thread when the platform allows it.
    - For explanation-only threads, reply with the reasoning and resolve only when the issue is clearly answered or stale.
    - For misunderstood or unnecessary comments, keep the tone respectful and concrete. State why no code change was made and whether a future follow-up would be appropriate.
