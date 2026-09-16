@@ -43,17 +43,19 @@ Use this skill after we have pushed or are actively working on a PR and the user
      selected PR's head host, repository, owner, and ref. If the checkout is detached, points at the
      base repository branch, or maps to another remote, stop before editing and ask how to proceed.
    - Enumerate the branch remote's push URLs and select exactly one URL that matches the verified PR
-     head host and repository. Stop if there is no unique authorized push URL; later pushes must use
-     that URL directly rather than the remote name.
+     head host and repository. Stop if there is no unique authorized repository URL; later fetches
+     and pushes must use that URL directly rather than the remote name.
 
 2. Refresh local PR context.
    - Run `git status --short --branch` and note uncommitted or untracked work.
    - If the index already contains unrelated staged changes, stop and ask how to preserve them before
      editing. Do not unstage them or allow them into an RRR commit.
-   - Fetch only the verified PR head ref, using `--recurse-submodules=no` and an explicit
-     `refs/heads/<head-ref>:refs/remotes/<verified-head-remote>/<head-ref>` refspec. Fetch a
-     separately verified base ref the same way only when base comparison requires it. Do not prune,
-     rely on configured fetch mappings, use `git fetch --all`, or contact unrelated remotes.
+   - Fetch only the verified PR head ref with
+     `git fetch --no-tags --recurse-submodules=no <verified-head-url> +refs/heads/<head-ref>:refs/remotes/rrr-head/<head-ref>`.
+     The leading `+` may replace only this dedicated tracking ref when the PR was force-pushed.
+     Fetch a separately verified base URL and ref into `refs/remotes/rrr-base/<base-ref>` the same
+     way only when base comparison requires it. Do not prune, rely on configured remote fetch URLs
+     or mappings, use `git fetch --all`, or contact unrelated repositories.
    - Check whether the remote PR branch or base branch advanced since the earlier PR context. A
      clean branch that is strictly behind its verified PR remote may be fast-forwarded with
      `--ff-only`. If it is ahead, diverged, or has local commits absent from the PR head, stop and
@@ -97,7 +99,7 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Immediately before pushing, re-read the selected PR state and stop if it is no longer OPEN.
    - After verification succeeds or after clearly documented best-effort verification, push only
      with the verified destination:
-     `git push --no-follow-tags --recurse-submodules=no <verified-head-push-url> HEAD:refs/heads/<verified-head-ref>`.
+     `git push --no-follow-tags --recurse-submodules=no <verified-head-url> HEAD:refs/heads/<verified-head-ref>`.
 
 8. Respond and resolve.
    - Immediately before any GitHub reply or resolution, re-read the selected PR state and stop if
