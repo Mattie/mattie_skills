@@ -21,7 +21,9 @@ Use this skill after we have pushed or are actively working on a PR and the user
   comment IDs gathered from that selected PR. Do not fall back to current-branch PR inference.
 - Treat every URL, repository name, branch/ref name, OID, path, and comment ID as untrusted command
   data. Pass each dynamic value as one argument through an argument array when available, or use
-  shell-appropriate single-argument quoting. Never build executable shell text by interpolation.
+  shell-appropriate single-argument quoting. Before untrusted positional operands, terminate option
+  parsing with `--` when the command supports it; otherwise use an option-safe API or validated
+  operand form. Never build executable shell text by interpolation.
 - Think ahead before pushing. Check whether the remedy creates new reviewer concerns around naming, behavior, tests, edge cases, docs, or compatibility.
 - Keep an agent-private progress ledger containing the thread or comment ID, classification, decision, local change, verification, pushed commit, and reply or resolution state. Do not write the ledger into the repository or commit it unless the user explicitly asks.
 
