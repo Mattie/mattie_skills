@@ -43,8 +43,11 @@ Use this skill after we have pushed or are actively working on a PR and the user
      selected PR's head host, repository, owner, and ref. If the checkout is detached, points at the
      base repository branch, or maps to another remote, stop before editing and ask how to proceed.
    - Enumerate the branch remote's push URLs and select exactly one URL that matches the verified PR
-     head host and repository. Stop if there is no unique authorized repository URL; later fetches
-     and pushes must use that URL directly rather than the remote name.
+     head host and repository. Reject URLs with embedded credentials; derive a credential-free
+     canonical HTTPS URL or use a credential-free verified SSH URL, relying on the normal credential
+     helper or SSH agent. Stop if there is no unique authorized repository URL, and never print or
+     execute a credential-bearing URL. Later fetches and pushes must use the selected URL directly
+     rather than the remote name.
    - Inspect effective `url.*.insteadOf` and `url.*.pushInsteadOf` Git configuration for rules that
      apply to the verified URL. Resolve the final fetch and push destinations separately and require
      both to remain on the selected PR head host and repository; stop if either is ambiguous or
@@ -54,8 +57,11 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Run `git status --short --branch` and note uncommitted or untracked work.
    - If the index already contains unrelated staged changes, stop and ask how to preserve them before
      editing. Do not unstage them or allow them into an RRR commit.
+   - Record pre-existing unstaged and untracked paths. If a remedy must touch the same path or an
+     overlapping hunk, stop and ask how to preserve that work. For disjoint paths or hunks, stage
+     selectively and verify the cached diff contains only the RRR remedy.
    - Fetch only the verified PR head ref with
-     `git fetch --no-tags --recurse-submodules=no <verified-head-url> +refs/heads/<head-ref>:refs/remotes/rrr-head/<head-ref>`.
+     `git fetch --no-tags --no-write-fetch-head --recurse-submodules=no <verified-head-url> +refs/heads/<head-ref>:refs/remotes/rrr-head/<head-ref>`.
      The leading `+` may replace only this dedicated tracking ref when the PR was force-pushed.
      Fetch a separately verified base URL and ref into `refs/remotes/rrr-base/<base-ref>` the same
      way only when base comparison requires it. Do not prune, rely on configured remote fetch URLs
