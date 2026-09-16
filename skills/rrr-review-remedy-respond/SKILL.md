@@ -87,6 +87,9 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Paginate the GraphQL review-thread connection with an `endCursor` variable and
      `pageInfo { hasNextPage, endCursor }` until `hasNextPage` is false. Do not classify or remedy
      from a partial page.
+   - For each thread, separately paginate its `comments` connection until that connection's
+     `hasNextPage` is false. Outer thread pagination does not guarantee that every reply within a
+     thread was returned; do not classify, reply to, or resolve a thread from truncated replies.
    - Also fetch and paginate review bodies and PR conversation comments; actionable feedback may exist outside inline review threads.
    - Also inspect the current PR diff, check status, and relevant surrounding code before deciding whether a comment is valid.
 
