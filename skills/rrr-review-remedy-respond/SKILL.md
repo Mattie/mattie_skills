@@ -44,7 +44,10 @@ Use this skill after we have pushed or are actively working on a PR and the user
 2. Refresh local PR context.
    - Run `git status --short --branch` and note uncommitted or untracked work.
    - Run `git fetch --all --prune`.
-   - Check whether the remote PR branch or base branch advanced since the earlier PR context. If the current branch is behind its remote, pull or rebase according to repo convention before reviewing.
+   - Check whether the remote PR branch or base branch advanced since the earlier PR context. A
+     clean branch that is strictly behind its verified PR remote may be fast-forwarded with
+     `--ff-only`. If it is ahead, diverged, or has local commits absent from the PR head, stop and
+     explain the state; do not pull, merge, or rebase it during RRR.
    - After synchronization, re-read the PR head OID and require the checked-out HEAD to match it
      before reviewing or editing. If they still differ, stop and explain the local and remote state.
    - If local unrelated changes block syncing, stop and ask how to preserve them.
@@ -81,12 +84,17 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - If the pass requires only replies or classifications, skip the commit and push and continue to the response step.
    - Stage only RRR changes.
    - Use a direct commit message such as `Address PR review comments`.
+   - Immediately before pushing, re-read the selected PR state and stop if it is no longer OPEN.
    - Push the current PR branch after verification succeeds or after clearly documented best-effort verification.
 
 8. Respond and resolve.
+   - Immediately before any GitHub reply or resolution, re-read the selected PR state and stop if
+     it is no longer OPEN.
    - Send every reply and resolution through the selected PR host; for direct API calls, pass
      `--hostname <pr-host>` explicitly.
-   - After pushing, re-read the PR head OID and confirm that it contains the remedy commit. Do not claim a fix is available or resolve its thread until that check succeeds.
+   - After pushing, re-read the PR head OID together with that state check and confirm that it
+     contains the remedy commit. Do not claim a fix is available or resolve its thread until that
+     check succeeds.
    - For fixed threads, reply with what changed and how it was verified, then resolve the thread when the platform allows it.
    - For explanation-only threads, reply with the reasoning and resolve only when the issue is clearly answered or stale.
    - For misunderstood or unnecessary comments, keep the tone respectful and concrete. State why no code change was made and whether a future follow-up would be appropriate.
