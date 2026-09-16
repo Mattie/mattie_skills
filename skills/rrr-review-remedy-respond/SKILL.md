@@ -61,11 +61,12 @@ Use this skill after we have pushed or are actively working on a PR and the user
      overlapping hunk, stop and ask how to preserve that work. For disjoint paths or hunks, stage
      selectively and verify the cached diff contains only the RRR remedy.
    - Fetch only the verified PR head ref with
-     `git fetch --no-tags --no-write-fetch-head --recurse-submodules=no <verified-head-url> +refs/heads/<head-ref>:refs/remotes/rrr-head/<head-ref>`.
-     The leading `+` may replace only this dedicated tracking ref when the PR was force-pushed.
-     Fetch a separately verified base URL and ref into `refs/remotes/rrr-base/<base-ref>` the same
-     way only when base comparison requires it. Do not prune, rely on configured remote fetch URLs
-     or mappings, use `git fetch --all`, or contact unrelated repositories.
+     `git fetch --no-tags --no-write-fetch-head --recurse-submodules=no <verified-head-url> refs/heads/<head-ref>`.
+     With no destination ref and `--no-write-fetch-head`, this downloads the selected branch's
+     objects without replacing any local ref or `FETCH_HEAD`, including after a force-push. Fetch a
+     separately verified base URL and ref the same way only when base comparison requires it. Do
+     not prune, rely on configured remote fetch URLs or mappings, use `git fetch --all`, or contact
+     unrelated repositories.
    - Check whether the remote PR branch or base branch advanced since the earlier PR context. A
      clean branch that is strictly behind its verified PR remote may be fast-forwarded with
      `--ff-only`. If it is ahead, diverged, or has local commits absent from the PR head, stop and
@@ -106,10 +107,15 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - If the pass requires only replies or classifications, skip the commit and push and continue to the response step.
    - Stage only RRR changes.
    - Use a direct commit message such as `Address PR review comments`.
-   - Immediately before pushing, re-read the selected PR state and stop if it is no longer OPEN.
+   - Immediately before pushing, re-read the selected PR state and head OID. Stop if the PR is no
+     longer OPEN or the remote head differs from the OID on which the remedy was based. Confirm with
+     `git merge-base --is-ancestor <expected-head-oid> HEAD` that the remedy is a fast-forward of
+     that exact remote head.
    - After verification succeeds or after clearly documented best-effort verification, push only
      with the verified destination:
-     `git push --no-follow-tags --recurse-submodules=no <verified-head-url> HEAD:refs/heads/<verified-head-ref>`.
+     `git push --no-follow-tags --recurse-submodules=no --force-with-lease=refs/heads/<verified-head-ref>:<expected-head-oid> <verified-head-url> HEAD:refs/heads/<verified-head-ref>`.
+     The lease is only a compare-and-swap guard against a concurrent remote change; the required
+     ancestry check forbids using it for a non-fast-forward rewrite.
 
 8. Respond and resolve.
    - Immediately before any GitHub reply or resolution, re-read the selected PR state and stop if
