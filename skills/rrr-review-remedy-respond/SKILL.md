@@ -50,9 +50,10 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Run `git status --short --branch` and note uncommitted or untracked work.
    - If the index already contains unrelated staged changes, stop and ask how to preserve them before
      editing. Do not unstage them or allow them into an RRR commit.
-   - Fetch and prune only the verified PR head remote. Fetch a separately verified base remote only
-     when base comparison requires it. Pass `--recurse-submodules=no` to each fetch. Do not use
-     `git fetch --all` or contact unrelated remotes.
+   - Fetch only the verified PR head ref, using `--recurse-submodules=no` and an explicit
+     `refs/heads/<head-ref>:refs/remotes/<verified-head-remote>/<head-ref>` refspec. Fetch a
+     separately verified base ref the same way only when base comparison requires it. Do not prune,
+     rely on configured fetch mappings, use `git fetch --all`, or contact unrelated remotes.
    - Check whether the remote PR branch or base branch advanced since the earlier PR context. A
      clean branch that is strictly behind its verified PR remote may be fast-forwarded with
      `--ff-only`. If it is ahead, diverged, or has local commits absent from the PR head, stop and
