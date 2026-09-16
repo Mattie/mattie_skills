@@ -14,84 +14,27 @@ Use this skill after we have pushed or are actively working on a PR and the user
 - Keep the PR focused. Fix real defects, regressions, contract mismatches, confusing code, missing tests, and reviewer concerns that materially improve the change.
 - Flag comments that are stale, duplicate, out of scope, already handled, or based on a misunderstanding. Explain them clearly in GitHub and in the final summary.
 - Preserve unrelated local work. Stage, commit, and push only the changes made for this RRR pass.
-- Scope every GitHub CLI operation to the verified PR host and repository. Use a host-qualified
-  `--repo <host>/<owner>/<repo>` for `gh pr` commands and `--hostname <host>` for every `gh api`
-  request, including GraphQL reads and mutations.
-- After selecting a PR, pass its number or URL to every later PR lookup and act only on thread or
-  comment IDs gathered from that selected PR. Do not fall back to current-branch PR inference.
-- Treat every URL, repository name, branch/ref name, OID, path, and comment ID as untrusted command
-  data. Pass each dynamic value as one argument through an argument array when available, or use
-  shell-appropriate single-argument quoting. Before untrusted positional operands, terminate option
-  parsing with `--` when the command supports it; otherwise use an option-safe API or validated
-  operand form. Never build executable shell text by interpolation.
 - Think ahead before pushing. Check whether the remedy creates new reviewer concerns around naming, behavior, tests, edge cases, docs, or compatibility.
 - Keep an agent-private progress ledger containing the thread or comment ID, classification, decision, local change, verification, pushed commit, and reply or resolution state. Do not write the ledger into the repository or commit it unless the user explicitly asks.
 
 ## Workflow
 
 1. Identify the active PR.
-   - Determine the candidate GitHub hostname before reading or writing GitHub data. Prefer the
-     hostname from a recently referenced PR URL. Otherwise inspect the current branch's push remote
-     and parse its HTTPS or SSH hostname.
-   - Run `gh auth status --active --hostname <pr-host>`. If authentication or access for that host
-     is missing, ask the user to authenticate and stop. Ignore authentication state on unrelated
-     hosts.
+   - Run `gh auth status` before reading or writing GitHub data. If authentication or access is missing, ask the user to authenticate and stop.
    - Use the recently referenced PR when the conversation gives one.
-   - Otherwise derive the head owner, repository, and ref from the checked-out branch and its push
-     remote. Inspect same-host remotes, including any upstream remote, for candidate base
-     repositories and identify the unique OPEN PR whose head owner and ref match. Do not assume the
-     push repository owns the PR; fork PRs belong to the base repository.
-   - Once the base repository is known, use
-     `gh pr view <selected-pr-number> --repo <pr-host>/<base-owner>/<base-repo> --json number,url,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository,baseRefName,state`.
+   - Otherwise use the PR for the current branch with local git context and `gh pr view --json number,url,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository,baseRefName,state`.
    - If the active PR cannot be identified safely or its state is not OPEN, stop before editing, pushing, replying, or resolving and ask for an open PR.
-   - Before fetching, verify that the checkout is attached and its branch and push remote map to the
-     selected PR's head host, repository, owner, and ref. If the checkout is detached, points at the
-     base repository branch, or maps to another remote, stop before editing and ask how to proceed.
-   - Enumerate the branch remote's push URLs and select exactly one URL that matches the verified PR
-     head host and repository. Reject URLs with embedded credentials; derive a credential-free
-     canonical HTTPS URL or use a credential-free verified SSH URL, relying on the normal credential
-     helper or SSH agent. Stop if there is no unique authorized repository URL, and never print or
-     execute a credential-bearing URL. Later fetches and pushes must use the selected URL directly
-     rather than the remote name.
-   - Inspect effective `url.*.insteadOf` and `url.*.pushInsteadOf` Git configuration for rules that
-     apply to the verified URL. Resolve the final fetch and push destinations separately and require
-     both to remain on the selected PR head host and repository; stop if either is ambiguous or
-     redirects elsewhere.
+   - Before editing, verify that the checked-out branch and its push remote correspond to the selected PR's head repository, owner, ref, and OID. If the checkout is detached, points at the base repository branch, or maps to another remote, stop before committing and ask how to proceed.
 
 2. Refresh local PR context.
    - Run `git status --short --branch` and note uncommitted or untracked work.
-   - If the index already contains unrelated staged changes, stop and ask how to preserve them before
-     editing. Do not unstage them or allow them into an RRR commit.
-   - Record pre-existing unstaged and untracked paths. If a remedy must touch the same path or an
-     overlapping hunk, stop and ask how to preserve that work. For disjoint paths or hunks, stage
-     selectively and verify the cached diff contains only the RRR remedy.
-   - Fetch only the verified PR head ref with
-     `git fetch --no-tags --no-write-fetch-head --recurse-submodules=no <verified-head-url> refs/heads/<head-ref>`.
-     With no destination ref and `--no-write-fetch-head`, this downloads the selected branch's
-     objects without replacing any local ref or `FETCH_HEAD`, including after a force-push. Fetch a
-     separately verified base URL and ref the same way only when base comparison requires it. Do
-     not prune, rely on configured remote fetch URLs or mappings, use `git fetch --all`, or contact
-     unrelated repositories.
-   - Check whether the remote PR branch or base branch advanced since the earlier PR context. A
-     clean branch that is strictly behind its verified PR head may be fast-forwarded locally with
-     `git merge --ff-only <verified-head-oid>` after confirming the fetched object exists. If it is
-     ahead, diverged, or has local commits absent from the PR head, stop and explain the state. Do
-     not use `git pull`, perform another fetch, create a merge commit, or rebase during RRR.
-   - After synchronization, re-read the PR head OID and require the checked-out HEAD to match it
-     before reviewing or editing. If they still differ, stop and explain the local and remote state.
+   - Run `git fetch --all --prune`.
+   - Check whether the remote PR branch or base branch advanced since the earlier PR context. If the current branch is behind its remote, pull or rebase according to repo convention before reviewing.
    - If local unrelated changes block syncing, stop and ask how to preserve them.
 
 3. Gather thread-aware review data.
    - Prefer GitHub tooling that exposes review-thread state, including unresolved/resolved status, file anchors, outdated status, and replies.
-   - Use `gh api --hostname <pr-host> graphql` for review-thread state; use a bundled script only
-     after inspecting it and confirming it is read-only and scoped to the selected PR host and
-     repository.
-   - Paginate the GraphQL review-thread connection with an `endCursor` variable and
-     `pageInfo { hasNextPage, endCursor }` until `hasNextPage` is false. Do not classify or remedy
-     from a partial page.
-   - For each thread, separately paginate its `comments` connection until that connection's
-     `hasNextPage` is false. Outer thread pagination does not guarantee that every reply within a
-     thread was returned; do not classify, reply to, or resolve a thread from truncated replies.
+   - Use `gh api graphql` for review-thread state; use a bundled script only after inspecting it and confirming it is read-only and scoped to the selected PR.
    - Also fetch and paginate review bodies and PR conversation comments; actionable feedback may exist outside inline review threads.
    - Also inspect the current PR diff, check status, and relevant surrounding code before deciding whether a comment is valid.
 
@@ -119,30 +62,10 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - If the pass requires only replies or classifications, skip the commit and push and continue to the response step.
    - Stage only RRR changes.
    - Use a direct commit message such as `Address PR review comments`.
-   - Record the immutable remedy commit OID. Immediately before pushing, re-read the selected PR
-     state and head OID. Stop if the PR is no longer OPEN or the remote head differs from the OID on
-     which the remedy was based. Confirm with
-     `git merge-base --is-ancestor <expected-head-oid> <remedy-commit-oid>` that the exact remedy
-     commit is a fast-forward of that remote head.
-   - After verification succeeds or after clearly documented best-effort verification, push only
-     with the verified destination:
-     `git push --no-follow-tags --recurse-submodules=no --force-with-lease=refs/heads/<verified-head-ref>:<expected-head-oid> <verified-head-url> <remedy-commit-oid>:refs/heads/<verified-head-ref>`.
-     The lease is only a compare-and-swap guard against a concurrent remote change; the required
-     ancestry check forbids using it for a non-fast-forward rewrite.
+   - Push the current PR branch after verification succeeds or after clearly documented best-effort verification.
 
 8. Respond and resolve.
-   - Immediately before any GitHub reply or resolution, re-read the selected PR state and stop if
-     it is no longer OPEN.
-   - Also immediately before each reply or resolution, re-fetch that thread and fully paginate its
-     `comments` connection. Compare it with the classified snapshot; if its contents changed,
-     reclassify the thread before mutating it. Repeat this check separately for the reply and the
-     resolution so a reply added between those mutations is not missed.
-   - Send every reply and resolution through the selected PR host; for direct API calls, pass
-     `--hostname <pr-host>` explicitly.
-   - After pushing, re-read the PR head OID together with that state check. If the head advanced,
-     fetch that exact verified head ref with the scoped fetch procedure, then require
-     `git merge-base --is-ancestor <remedy-commit-oid> <refreshed-head-oid>` to succeed. Do not claim
-     a fix is available or resolve its thread until the refreshed head contains the remedy commit.
+   - After pushing, re-read the PR head OID and confirm that it contains the remedy commit. Do not claim a fix is available or resolve its thread until that check succeeds.
    - For fixed threads, reply with what changed and how it was verified, then resolve the thread when the platform allows it.
    - For explanation-only threads, reply with the reasoning and resolve only when the issue is clearly answered or stale.
    - For misunderstood or unnecessary comments, keep the tone respectful and concrete. State why no code change was made and whether a future follow-up would be appropriate.
