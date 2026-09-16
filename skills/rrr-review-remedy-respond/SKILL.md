@@ -80,6 +80,9 @@ Use this skill after we have pushed or are actively working on a PR and the user
    - Use `gh api --hostname <pr-host> graphql` for review-thread state; use a bundled script only
      after inspecting it and confirming it is read-only and scoped to the selected PR host and
      repository.
+   - Paginate the GraphQL review-thread connection with an `endCursor` variable and
+     `pageInfo { hasNextPage, endCursor }` until `hasNextPage` is false. Do not classify or remedy
+     from a partial page.
    - Also fetch and paginate review bodies and PR conversation comments; actionable feedback may exist outside inline review threads.
    - Also inspect the current PR diff, check status, and relevant surrounding code before deciding whether a comment is valid.
 
