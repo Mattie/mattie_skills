@@ -123,9 +123,10 @@ Use this skill after we have pushed or are actively working on a PR and the user
      it is no longer OPEN.
    - Send every reply and resolution through the selected PR host; for direct API calls, pass
      `--hostname <pr-host>` explicitly.
-   - After pushing, re-read the PR head OID together with that state check and confirm that it equals
-     the immutable remedy commit OID. Do not claim a fix is available or resolve its thread until
-     that check succeeds.
+   - After pushing, re-read the PR head OID together with that state check. If the head advanced,
+     fetch that exact verified head ref with the scoped fetch procedure, then require
+     `git merge-base --is-ancestor <remedy-commit-oid> <refreshed-head-oid>` to succeed. Do not claim
+     a fix is available or resolve its thread until the refreshed head contains the remedy commit.
    - For fixed threads, reply with what changed and how it was verified, then resolve the thread when the platform allows it.
    - For explanation-only threads, reply with the reasoning and resolve only when the issue is clearly answered or stale.
    - For misunderstood or unnecessary comments, keep the tone respectful and concrete. State why no code change was made and whether a future follow-up would be appropriate.
