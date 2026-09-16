@@ -1,0 +1,7 @@
+interface:
+  display_name: "Soft Skill Creator"
+  short_description: "Create skills that teach feel, voice, and judgment"
+  default_prompt: "Use $soft-skill-creator to create or soften a skill whose guidance lives in style, voice, or qualitative judgment."
+
+policy:
+  allow_implicit_invocation: true

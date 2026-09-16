@@ -1,0 +1,4 @@
+interface:
+  display_name: "Quiet UX"
+  short_description: "Calm interfaces with an optional guided layer"
+  default_prompt: "Use $quiet-ux to design this artifact with a calm light view and optional contextual guidance."

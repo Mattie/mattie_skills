@@ -1,0 +1,4 @@
+interface:
+  display_name: "Aiconographer"
+  short_description: "Generate and vectorize lore article icons"
+  default_prompt: "Use $aiconographer to create six vector icon candidates for this lore article and select the strongest."

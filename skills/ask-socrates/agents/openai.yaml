@@ -1,0 +1,7 @@
+interface:
+  display_name: "Ask Socrates"
+  short_description: "Three Socratic questions that expose hidden assumptions"
+  default_prompt: "Use $ask-socrates to examine this article, situation, or problem through one frame and three crisp questions."
+
+policy:
+  allow_implicit_invocation: true
