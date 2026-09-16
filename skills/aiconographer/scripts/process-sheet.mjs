@@ -18,20 +18,8 @@ const INKS = [
 ];
 const WHITE = { hex: '#FFFFFF', rgb: [255, 255, 255] };
 const TRACE_PALETTE = [WHITE, ...INKS];
-const CORAL_RED_DOMINANCE_THRESHOLD = 12;
 const REVIEW_ALIASES = ['ash', 'birch', 'cedar', 'dune', 'ember', 'flint'];
 const REQUIRED_PREVIEW_SIZES = [192, 48];
-const COMPILER_OUTPUT_NAMES = [
-  'source-sheet.png',
-  'tiles',
-  'svg',
-  'previews',
-  'contact-sheets',
-  'anonymous-review',
-  'review-map.json',
-  'validation.json',
-];
-let activeOutputRoot = null;
 
 const VECTOR_SETTINGS = {
   preset: 'poster',
@@ -132,13 +120,6 @@ async function prepareEmptyDirectory(directory) {
   await fs.mkdir(directory, { recursive: true });
 }
 
-/** Remove only artifacts owned by a failed compiler invocation. */
-async function cleanCompilerOutput(directory) {
-  await Promise.allSettled(COMPILER_OUTPUT_NAMES.map((name) =>
-    fs.rm(path.join(directory, name), { recursive: true, force: true }),
-  ));
-}
-
 /** Return a lowercase SHA-256 checksum for a buffer. */
 function sha256(buffer) {
   return crypto.createHash('sha256').update(buffer).digest('hex');
@@ -178,23 +159,22 @@ export async function normalizeTile(sharp, sourcePath, region) {
     const red = data[offset];
     const green = data[offset + 1];
     const blue = data[offset + 2];
-    const palette = red - Math.max(green, blue) >= CORAL_RED_DOMINANCE_THRESHOLD
-      ? TRACE_PALETTE : [WHITE, INKS[0]];
-    let selected = palette[0];
+    let bestIndex = 0;
     let bestDistance = Number.POSITIVE_INFINITY;
 
-    for (const entry of palette) {
-      const [targetRed, targetGreen, targetBlue] = entry.rgb;
+    for (let index = 0; index < TRACE_PALETTE.length; index += 1) {
+      const [targetRed, targetGreen, targetBlue] = TRACE_PALETTE[index].rgb;
       const distance =
         (red - targetRed) ** 2 +
         (green - targetGreen) ** 2 +
         (blue - targetBlue) ** 2;
       if (distance < bestDistance) {
         bestDistance = distance;
-        selected = entry;
+        bestIndex = index;
       }
     }
 
+    const selected = TRACE_PALETTE[bestIndex];
     output[offset] = selected.rgb[0];
     output[offset + 1] = selected.rgb[1];
     output[offset + 2] = selected.rgb[2];
@@ -387,7 +367,6 @@ async function main() {
   await fs.access(inputPath);
   if (articlePath) await fs.access(articlePath);
   await prepareEmptyDirectory(outputRoot);
-  activeOutputRoot = outputRoot;
 
   const { sharp, vtracer, Resvg } = loadDependencies(depsRoot);
   const sourceSheetPath = path.join(outputRoot, 'source-sheet.png');
@@ -523,7 +502,6 @@ async function main() {
   };
   const validationPath = path.join(outputRoot, 'validation.json');
   await writeJson(validationPath, validation);
-  activeOutputRoot = null;
 
   process.stdout.write(
     `${JSON.stringify({
@@ -538,11 +516,7 @@ async function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch(async (error) => {
-    if (activeOutputRoot) {
-      await cleanCompilerOutput(activeOutputRoot);
-      activeOutputRoot = null;
-    }
+  main().catch((error) => {
     process.stderr.write(`aiconographer: ${error instanceof Error ? error.message : String(error)}\n`);
     process.exitCode = 1;
   });

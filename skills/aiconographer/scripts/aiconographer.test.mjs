@@ -9,10 +9,8 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 import { normalizeTile, positiveInteger, previewSizes, validatePreview } from './process-sheet.mjs';
-import { copyExclusive, writeSelectionExclusive } from './finalize-winner.mjs';
 
 const finalizer = fileURLToPath(new URL('./finalize-winner.mjs', import.meta.url));
-const processor = fileURLToPath(new URL('./process-sheet.mjs', import.meta.url));
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 
 test('integer and preview-size parsing rejects partial tokens and keeps judging sizes', () => {
@@ -53,116 +51,6 @@ test('preview validation accepts pixel-aligned art without partially transparent
   assert.equal(validation.partial, 0);
   assert.equal(validation.transparent, 2);
   assert.equal(validation.opaque, 2);
-});
-
-test('tile normalization does not invent coral from neutral antialias pixels', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-neutral-'));
-  try {
-    const source = path.join(root, 'antialias.png');
-    await sharp(Buffer.from([
-      150, 150, 149,
-      247, 124, 106,
-    ]), {
-      raw: { width: 2, height: 1, channels: 3 },
-    }).png().toFile(source);
-    const normalized = await normalizeTile(sharp, source, { left: 0, top: 0, width: 2, height: 1 });
-    assert.equal(normalized.counts['#FFFFFF'], 1);
-    assert.equal(normalized.counts['#2C2C2B'], 0);
-    assert.equal(normalized.counts['#F45138'], 1);
-  } finally {
-    await fs.rm(root, { recursive: true, force: true });
-  }
-});
-
-test('selection write failure removes a partially created selection file', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-selection-'));
-  const selectionPath = path.join(root, 'selection.json');
-  const failingFs = {
-    writeFile: async (destination, contents, options) => {
-      await fs.writeFile(destination, contents.slice(0, 8), options);
-      const error = new Error('simulated disk full');
-      error.code = 'ENOSPC';
-      throw error;
-    },
-    unlink: fs.unlink.bind(fs),
-  };
-  try {
-    await assert.rejects(
-      writeSelectionExclusive(failingFs, selectionPath, '{"candidate":"c1"}\n'),
-      /simulated disk full/,
-    );
-    await assert.rejects(fs.access(selectionPath));
-  } finally {
-    await fs.rm(root, { recursive: true, force: true });
-  }
-});
-
-test('post-copy metadata failure removes the untracked destination', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-copy-'));
-  const source = path.join(root, 'source.svg');
-  const destination = path.join(root, 'destination.svg');
-  const failingFs = {
-    copyFile: fs.copyFile.bind(fs),
-    stat: async () => { throw new Error('simulated stat failure'); },
-    readFile: fs.readFile.bind(fs),
-    unlink: fs.unlink.bind(fs),
-  };
-  try {
-    await fs.writeFile(source, '<svg/>');
-    await assert.rejects(copyExclusive(failingFs, source, destination), /simulated stat failure/);
-    await assert.rejects(fs.access(destination));
-  } finally {
-    await fs.rm(root, { recursive: true, force: true });
-  }
-});
-
-test('copy hash mismatch removes the changed canonical artifact', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-copy-hash-'));
-  const source = path.join(root, 'source.svg');
-  const destination = path.join(root, 'destination.svg');
-  const original = Buffer.from('<svg/>');
-  const changed = Buffer.from('<svg><path/></svg>');
-  const changingFs = {
-    copyFile: async (from, to, flags) => {
-      await fs.writeFile(from, changed);
-      await fs.copyFile(from, to, flags);
-    },
-    stat: fs.stat.bind(fs),
-    readFile: fs.readFile.bind(fs),
-    unlink: fs.unlink.bind(fs),
-  };
-  try {
-    await fs.writeFile(source, original);
-    await assert.rejects(
-      copyExclusive(changingFs, source, destination, sha256(original)),
-      /changed while copying/,
-    );
-    await assert.rejects(fs.access(destination));
-  } finally {
-    await fs.rm(root, { recursive: true, force: true });
-  }
-});
-
-test('compilation failure leaves its output directory empty for retry', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-compile-'));
-  const source = path.join(root, 'invalid-sheet.png');
-  const output = path.join(root, 'output');
-  try {
-    await sharp({
-      create: { width: 10, height: 10, channels: 3, background: '#FFFFFF' },
-    }).png().toFile(source);
-    const result = spawnSync(process.execPath, [
-      processor,
-      '--input', source,
-      '--output', output,
-      '--deps-root', path.dirname(processor),
-    ], { encoding: 'utf8' });
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /do not divide/);
-    assert.deepEqual(await fs.readdir(output), []);
-  } finally {
-    await fs.rm(root, { recursive: true, force: true });
-  }
 });
 
 async function createRun(root, { alteredSvg = false, lateConflict = false } = {}) {
