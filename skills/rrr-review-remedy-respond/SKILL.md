@@ -28,7 +28,7 @@ Use this skill after we have pushed or are actively working on a PR and the user
 
 2. Refresh local PR context.
    - Run `git status --short --branch` and note uncommitted or untracked work.
-   - Run `git fetch --all --prune`.
+   - Fetch only the selected PR's head and base remotes as needed. Do not fetch all remotes or prune unrelated refs.
    - Check whether the remote PR branch or base branch advanced since the earlier PR context. If the current branch is behind its remote, pull or rebase according to repo convention before reviewing.
    - If local unrelated changes block syncing, stop and ask how to preserve them.
 
