@@ -15,6 +15,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | [`aiconographer`](skills/aiconographer/) | Generate, compile, and select consistent two-color lore article icons. | `article icon`, `lore icon`, `icon candidates` |
 | [`ask-socrates`](skills/ask-socrates/) | Turn an article, situation, decision, or problem into one frame and three questions chosen from Socratic and Platonic thought tools. | `Socratic lens`, `think like Socrates`, `three questions` |
 | [`goal-check`](skills/goal-check/) | Summarize the thread's longer-term goal, recent work, and the human input needed next. | `goal check`, `context reset`, `quick orientation` |
+| [`lean-proof-review`](skills/lean-proof-review/) | Review Lean proofs for faithful statements, trustworthy checking, and correspondence with manuscript claims. | `Lean proof audit`, `statement fidelity`, `formal proof review` |
 | [`prior-art`](skills/prior-art/) | Find existing/reusable options, starting with the current repository and local skills, before re-inventing. | `does this exist?`, `YAGNI review`, `avoid reinventing the wheel` |
 | [`quiet-ux`](skills/quiet-ux/) | Design calm visual artifacts with a concise light view and optional richer guidance. | `less talkative UI`, `quiet interface`, `reduce UI clutter` |
 | [`rrr-review-remedy-respond`](skills/rrr-review-remedy-respond/) | Review active GitHub PR comments, fix verified issues, push remedies, and reply to or resolve each thread. | `RRR`, `review remedy respond` |
