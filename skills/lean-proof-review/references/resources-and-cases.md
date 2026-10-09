@@ -2,6 +2,8 @@
 
 Curated 2026-10-08 from a primary-source research review. These summaries preserve the evidence classification as of that date. Refresh live documentation, case status, tool compatibility, licenses, and known issues before relying on them in a new project. Do not infer an error rate or a catalogue of journal retractions from this selection.
 
+Additional audit and metadata resource links checked 2026-10-09; dated case classifications are unchanged.
+
 ## Maintained resources to consult first
 
 | Resource | Use and limit |
@@ -12,6 +14,8 @@ Curated 2026-10-08 from a primary-source research review. These summaries preser
 | [Nanoda](https://github.com/ammkrn/nanoda_lib) | Independent checker implementation. Pin the chosen revision, inspect known fixes, and retain exporter/artifact provenance. It can have its own bugs. |
 | [Lean Kernel Arena](https://arena.lean-lang.org/) | Checkers and valid/invalid boundary cases. Reuse relevant controls; a current leaderboard does not certify a different binary or all proofs. |
 | [ATP Checkers](https://github.com/Shashi456/atp-checkers) | Counterexample and specification-defect triage. Findings vary in strength. Check toolchain compatibility in isolation instead of downgrading the proof project. |
+| [axiom-audit](https://github.com/leanprover-community/axiom-audit) | Optional library-wide transitive axiom-allowlist audit of compiled declarations. Check toolchain compatibility and explicit module coverage; a root need not import the whole library. It does not independently validate proofs. |
+| [formalization.yaml](https://github.com/mathlib-initiative/formalization.yaml) | Optional self-reported provenance, process, scope, and fidelity metadata. Prefer an existing format where appropriate; metadata neither replaces execution receipts nor certifies faithfulness. |
 | [AGMAI recommendations, September 29, 2026](https://agmai.org/general-sep29/) | Guidance on understanding, attribution, exposition, and formal artifacts. Advisory recommendations, not universal venue requirements. |
 
 Tool names here are not installation instructions or permanent compatibility endorsements. At the research snapshot, comparator and Nanoda displayed Apache-2.0 licensing; ATP Checkers displayed MIT metadata. Verify the exact selected artifact and license before reuse.
