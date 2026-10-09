@@ -18,6 +18,7 @@ Human specialist review is optional unless explicitly requested by the user or r
 Read the relevant references:
 
 - [Specification and nonvacuity](references/specification.md): when creating statements, extending abstract hypotheses, translating mathematics, or reviewing a surprising endpoint.
+- [Library quality](references/library-quality.md): when the user requests code-quality, library API, or upstream-contribution review. Otherwise these recommendations are optional.
 - [Artifact and checker evidence](references/artifact-validation.md): when validating unreviewed generated proofs, claiming independent verification, or preparing a reproducible release.
 - [GitHub submission](references/github-submission.md): only when GitHub PRs, Actions, or releases are the submission or distribution route.
 - [Prose and contribution](references/publication.md): when writing or reviewing a paper, assessing novelty, or deciding how strongly to describe a result.

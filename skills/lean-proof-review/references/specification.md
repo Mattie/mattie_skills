@@ -21,6 +21,8 @@ Look for a weaker substitute: pointwise instead of uniform bounds, one witness i
 
 Construct representative intended examples of abstract assumptions, where feasible. Examine zero, negative, boundary, finite, and degenerate cases relevant to the claim. Try simple counterexamples and compare known special cases. These checks can expose mistakes; finitely many examples cannot certify a universal proposition.
 
+When practical, make a semantic finding reproducible with a small Lean exhibit: a counterexample, incompatibility proof, or concrete calculation exposing a definition mismatch, checked under the target toolchain and relevant imports. State exactly what it demonstrates. A failed tactic or unsuccessful proof search is not a refutation; if no exhibit is available, distinguish other direct evidence from an unresolved concern.
+
 Pay attention to Lean's total and typed operations:
 
 - Natural subtraction truncates. A difference over naturals may not mean the integer or real difference in prose.
