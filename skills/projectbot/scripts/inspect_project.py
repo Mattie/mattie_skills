@@ -314,6 +314,8 @@ def inspect(directory, *, control_root=None, project_id=None, snapshot=None,
     now = datetime.now(timezone.utc)
     directory = Path(directory).resolve(strict=True)
     control, workspace = discover(directory, control_root)
+    if control_root is not None and not (control / "projects/PROJECT.md").is_file():
+        raise RecordError(f"Explicit control root has no readable root brief: {control / 'projects/PROJECT.md'}")
     report = {"schema_version": 1, "inspected_at": now.isoformat(), "directory": str(directory),
               "host": {"id": host_id, "machine": platform.node()}, "workspace": str(workspace),
               "control_root": str(control) if control else None, "status": "unmanaged",

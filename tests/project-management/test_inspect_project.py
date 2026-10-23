@@ -168,6 +168,40 @@ class InspectorTests(unittest.TestCase):
         self.assertEqual(report["status"], "redirect_required")
         self.assertIsNone(report["tree"])
 
+    def test_cli_explicit_control_requires_root_brief(self):
+        absent = self.root / "absent-control"
+        empty = self.root / "empty-control"
+        empty.mkdir()
+        invalid = self.root / "invalid-control"
+        (invalid / "projects").mkdir(parents=True)
+        (invalid / "projects/PROJECT.md").write_text("No frontmatter\n", encoding="utf-8")
+        for managed in (False, True):
+            if managed:
+                self.project()
+            for control in (absent, empty, invalid):
+                with self.subTest(managed=managed, control=control.name):
+                    result = subprocess.run(
+                        [sys.executable, str(SCRIPT), str(self.root), "--control-root", str(control)],
+                        capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 2, result.stdout)
+                    report = json.loads(result.stdout)
+                    self.assertEqual(report["status"], "error")
+                    self.assertTrue(report["diagnostics"])
+
+    def test_redirect_requires_available_canonical_records(self):
+        canonical = self.root / "canonical-control"
+        self.project(control_root=str(canonical))
+        redirect = inspector.inspect(self.root)
+        self.assertEqual(redirect["status"], "redirect_required")
+        with self.assertRaises((OSError, inspector.RecordError)):
+            inspector.inspect(self.root, control_root=redirect["declared_control_root"])
+        (canonical / "projects").mkdir(parents=True)
+        shutil.copyfile(self.control / "projects/PROJECT.md", canonical / "projects/PROJECT.md")
+        report = inspector.inspect(self.root, control_root=canonical)
+        self.assertEqual(report["status"], "ok")
+        self.assertEqual(report["selected_project"], "root")
+        self.assertEqual(report["control_root"], str(canonical))
+
     def test_chat_relationships_include_nested_workers_without_guessing(self):
         chief = {"harness": "codex", "host": "local", "thread": "chief"}
         child = {**chief, "thread": "child"}
