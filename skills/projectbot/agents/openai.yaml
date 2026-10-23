@@ -1,0 +1,4 @@
+interface:
+  display_name: "Projectbot"
+  short_description: "Drive project queues and coordinate focused workers"
+  default_prompt: "Use $projectbot as this project's chief: reconcile progress, queue the next useful work, and coordinate authorized worker threads with bounded context."
