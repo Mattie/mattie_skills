@@ -1,54 +1,33 @@
-# Project-management extension
+# Project records
 
-Read this only for project-management requests or assignment-aware work on an
-already managed item. Ordinary lists need no migration. The agent maintains the
-records; the human should be able to speak in outcomes and priorities.
+Use these records when coordinating assignments or when a project already uses
+them. Ordinary Todo lists need no setup. Without an assigned chief, the agent
+handling the Todo request can maintain the records and do the work itself.
 
-Projectbot is optional, including when using these project records. With no chief
-assigned to a scope (directly or through its parent), the agent handling the user's
-Todo request maintains the applicable records and does the requested work. A
-project record, `chief: null`, or an installed Projectbot skill does not require
-appointing a chief. Still honor existing assignments, dependencies, and lifecycle.
-
-## One home for each fact
-
-Use the existing repository `.todo/` as the default control directory:
+## Where things live
 
 ```text
 .todo/
-  features.md                    # Existing root lists, unchanged
+  features.md
   tasks.md
   projects/
-    PROJECT.md                   # Root project brief and chief binding
+    PROJECT.md
     search/
-      PROJECT.md                 # Optional subproject brief
-      tasks.md                   # Work owned by this subproject
+      PROJECT.md
+      tasks.md
 ```
 
-The root's lists stay directly in `.todo/`. Each subproject's lists live beside
-its `PROJECT.md`. Keep subprojects as sibling directories under `projects/`,
-with an explicit parent ID for deeper hierarchies. The directory describes an
-ownership scope, not necessarily a source-code folder. Record source paths in
-the brief. Use lowercase directory slugs and stable IDs that survive renaming.
-Never create a subproject merely because a source directory exists.
+Root lists keep their existing location. Optional subprojects keep lists beside
+their own brief. Subproject directories are siblings under `projects/`; parent IDs
+express deeper relationships. Add a subproject when it helps manage real work.
 
-The project brief owns intent, lifecycle, priority, chief identity, and delegation
-authority. Todo items own task state, assignments, and acceptance evidence. Chat
-status is execution evidence, not the task's outcome. A status summary is derived
-and carries an observation time; it never becomes a second task list.
-
-Create only the files needed by the current request. Keep `.todo/` ignored as in
-the base skill. Local ignored files do not supply backup, cross-host sync, or
-shared state between Git worktrees. Record one absolute control-directory path
-in the brief and every worker packet; worktrees must not initialize competing
-copies. If another host cannot reach it, return a result packet to its chief.
-Do not silently copy state or claim it is synchronized. A user-selected durable
-store can replace this path later; preserve IDs and ownership on migration.
+Keep one editable home for each task. `.todo/` stays ignored by Git, so workers in
+other worktrees or hosts need the canonical control path or a way to return results
+to its writer. Ignored files aren't a backup or a synchronization mechanism.
 
 ## Project brief
 
-Use Markdown with YAML frontmatter for the few fields agents must reconcile.
-This is an illustrative active project, not authorization to start one:
+Use Markdown with YAML frontmatter so the inspector can find the project and chief:
 
 ```markdown
 ---
@@ -63,48 +42,37 @@ updated_at: 2026-10-16T18:00:00Z
 # Atlas
 
 ## Outcome and scope
-Deliver usable search. Own src/search and its integration tests.
-Done means the agreed search acceptance scenarios pass in the target branch.
+Deliver useful search in src/search. Done means the agreed search scenarios pass
+in the target branch.
 
 ## Mandate
 Source: human instruction in <thread/message reference>, <date>.
-May create worker threads in this project and follow up with those workers.
-May inspect existing project chats; messaging pre-existing chats needs the
-human's authorization unless already included in this mandate.
-Maximum two concurrent worker attempts across this project and its children.
-Run on request; dispatch at most one wave per invocation. No scheduled wake.
-Stop dispatching when sleeping, cancelled, out of capacity, or lacking ready work.
+May create workers and follow up with them; up to two active across this project.
+Work on demand within the requested scope.
 
 ## Next outcomes
-1. Search returns useful results.
-2. Search stays responsive on the agreed dataset.
+Search tolerates spelling mistakes.
 
 ## Dependencies
 None known.
 
 ## Follow-up
-On demand. No automatic follow-up is configured.
+On demand.
 ```
 
-Use `chief: null` when there is no observed binding; never invent thread IDs.
-A subproject has its own stable ID, parent ID, bounded scope, and optional chief.
-It inherits ancestor restrictions; child authority cannot expand them. Check
-parents for effective lifecycle and dispatch limits. Reject parent cycles.
+Keep IDs stable. Use `chief: null` without a known binding. A child has its own ID
+and a parent ID; its authority and lifecycle remain subject to the parent's limits.
+Optional `source_paths` map source directories to subprojects for inspection.
 
-Capture the user's actual delegation mandate, including permitted thread creation,
-which existing chats may receive messages, scope, capacity, and any run/time/spend
-limits they set. Preserve prior authorization instead of asking every time.
-If no standing mandate exists, a status request is observation only; a request
-to plan or queue work allows local tracking updates. A request to drive work
-allows the requested work, with dispatch only through available, authorized tools.
-Suggested initial capacity is two workers with on-demand runs; it is a convention,
-not permission for unlimited spending or perpetual execution.
+The prose should capture the goal, actual delegation authority, important limits,
+and next step. Adapt the headings to the project. Record any configured follow-up
+mechanism and how to stop it. Preserve existing authorization rather than asking
+for it on every invocation.
 
-## Managed Todo items
+## Assignments on Todo items
 
-Preserve the two sections, checkboxes, original wording, and completion notes.
-Add metadata only when the item needs coordination. Existing unannotated items
-are queued; they need an ID before delegation or dependency links.
+Keep the normal Open and Completed sections and the user's wording. Add metadata
+when coordination needs it. Unannotated open items are queued.
 
 ```markdown
 ## Open
@@ -122,78 +90,44 @@ are queued; they need an ID before delegation or dependency links.
 ## Completed
 ```
 
-An item ID is unique within the root project tree and never reused. For outside
-dependencies, qualify it with the external project ID and locator. On retries,
-keep the item ID and create a new attempt ID. Add fields such as priority,
-artifact, blocker, or last accepted result only when useful. List order is the
-default priority. Avoid mirroring the entire conversation in metadata.
+Use single-line YAML values for metadata. An item needs a unique, stable ID before
+it is delegated or referenced as a dependency. List order supplies the default
+priority. Add artifact links, blockers, or other fields only when useful.
 
-| State | Meaning |
-| --- | --- |
-| queued | Available when acceptance, dependencies, authority, and capacity permit |
-| active | A worker is assigned; includes dispatch with an uncertain outcome |
-| review | Result returned; acceptance or integration is still being checked |
-| blocked | Needs a named dependency, decision, or capability |
-| paused | Work was deliberately suspended |
-| cancelled | No longer wanted; retain unchecked with reason and date |
-| done | Accepted; checked and moved to Completed with resolution evidence |
+States are `queued`, `active`, `review`, `blocked`, `paused`, `cancelled`, and `done`.
+Use `review` while checking a returned result. Check and move accepted work to
+Completed with its resolution evidence. Keep cancelled work unchecked with a reason;
+it wasn't delivered. Todo's verified-obsolete completion rule still applies.
 
-Do not put cancelled work under Completed or count it as delivered. Obsolete
-work may follow Todo's verified-obsolete completion rule, with that outcome
-distinguished from delivery. Reopening accepted work preserves its ID and prior
-resolution evidence. Moving an item to a subproject moves its full entry; do not
-leave a second editable copy. Use a link if the parent needs a pointer.
+Before launching a worker, save its attempt with `dispatch: pending`; save the
+observed binding and `dispatch: confirmed` after launch. An ambiguous launch stays
+`dispatch: unknown` and occupies capacity until checked. On retry, retain the item
+ID and create a new attempt ID. Accept results for the current attempt once; retain
+older results as useful evidence without letting them overwrite current ownership.
 
-Before dispatch, record an active attempt with `dispatch: pending`. Persist the
-observed worker identity and `dispatch: confirmed` after success. If the outcome
-is ambiguous, use `dispatch: unknown`, keep the capacity reserved, and inspect
-the harness before retrying. An idle, missing, or inaccessible chat does not prove
-the attempt stopped. Repeated identical results for the same attempt must not
-close work twice or schedule duplicate follow-ups. Accept a result only for the
-current attempt; retain useful older results as evidence without changing ownership.
+## Ownership and resuming work
 
-## Ownership and recovery
+Use one writer for each scope's shared records. Usually that's its chief; without
+a chief, the current agent can do it. Workers return results to that writer. Reread
+human edits before updating records, and move entries rather than duplicating them.
 
-When a chief is assigned, that chief writes the scope's project brief and managed
-lists. Without an assigned chief, the agent handling the Todo request can be the
-writer; ordinary Todo use does not need a persistent chief binding. Serialize
-edits and check for existing work in either case. Under a chief, delegated workers
-return results rather than rewriting shared lists. A root chief may cover children
-without child chiefs. When a child chief exists, the root requests changes through
-the authorized channel rather than concurrently editing that child's records.
-Direct human edits are authoritative: reread before updates and resolve conflicts
-without overwriting them. A new Todo request in a worker chat returns a proposed
-tracking change to the chief when it cannot safely serialize the edit.
+A replacement chief reads the saved brief and assignments, checks ongoing work,
+and establishes the handoff before taking ownership. An inaccessible chat is unknown,
+not evidence that its work stopped. This convention prevents ordinary editing
+collisions; genuinely concurrent writers need a storage mechanism that serializes them.
 
-This is a single-writer convention, not a distributed lock. If two chiefs or
-hosts may be running, do not take over based on elapsed time. Verify the previous
-writer has stopped or use a real serialized coordinator. A replacement chief
-reads the brief, open work and attempt bindings, checks the associated threads,
-then rebinds ownership. Missing evidence stays unknown, not queued or completed.
+## Project lifecycle
 
-## Lifecycle and status
+- `active`: work may proceed within the human's instructions.
+- `sleeping`: hold new work until resumed.
+- `cancelled`: stop future work and preserve existing artifacts.
+- `completed`: the project outcome has been accepted.
 
-- **active:** eligible for authorized dispatch.
-- **sleeping:** no new dispatch in this scope or descendants. Record a wake
-  condition, or "until asked". A wake date alone does not schedule anything.
-- **cancelled:** no new dispatch; preserve unfinished work and artifacts. Reopening
-  requires explicit human direction. Killing a project means cancellation, not
-  deleting files, branches, threads, or remote resources.
-- **completed:** the project outcome has been accepted, including required
-  integration. Empty queues or stopped chats alone are insufficient.
+Sleep and cancellation apply to descendants. Save that state before disabling wakes
+or requesting worker stops, and report what actually stopped. Late results can be
+reviewed without restarting the project. Resuming a parent preserves a child's own
+pause or cancellation. Reopening cancelled work requires human direction.
 
-For sleep or cancel, persist the lifecycle first, then pause relevant scheduled
-wakes and request that running workers stop safely when tools and authority allow.
-Report each running attempt as stopped, still running, or unknown. Archiving a
-thread is not proof of cancellation. Late results may be recorded and reviewed,
-but must never resume the project or launch successors by themselves. Resuming
-a parent does not clear a child's own sleeping or cancelled state.
-
-Reprioritization changes future selection. Avoid interrupting useful in-flight
-work unless the human asks or its outcome is no longer useful.
-
-Report progress against outcomes: delivered evidence, active attempts, ready
-queue, blockers, next action, and last observation time. Distinguish requested,
-queued, started, returned, accepted, and integrated. Counts are useful; a percentage
-of arbitrary tasks is not an overall project completion estimate. On a read-only
-status request, report discrepancies without silently adopting chats or dispatching.
+Priorities usually change what starts next. Avoid interrupting useful work unless
+asked or its result is no longer wanted. Report progress through delivered outcomes,
+current work, and blockers; task counts alone don't measure project completion.

@@ -9,30 +9,19 @@ This skill manages local, project-specific task tracking in markdown files under
 
 Use this skill whenever the user asks to track, triage, clean up, summarize, search, or resolve entries in local TODO files.
 
-Todo works independently. Projectbot is an optional coordination layer, never a
-prerequisite for adding, maintaining, or implementing Todo work. Do not require
-chief setup, a worker thread, or a delegation mandate for ordinary Todo commands.
+Todo works independently. Use Projectbot when the human wants a project chief;
+ordinary Todo work needs no chief or worker setup.
 
 ## Project-management requests
 
-Ordinary push, pop, search, analyze, and summarize requests keep the lightweight
-behavior below. A project name or the word "project" alone does not enable management.
+For coordinated work, read [the project records reference](references/project-management.md).
+Also read it and the relevant brief when `.todo/projects/PROJECT.md` already exists
+or an assignment supplies a control directory. Respect current assignments,
+lifecycle, and record ownership before changing lists. The records can be used
+without Projectbot; installation alone doesn't assign a chief.
 
-When the user asks to manage project progress, coordinate chats, keep work moving,
-or establish a project chief, read [references/project-management.md](references/project-management.md).
-That extension defines durable project records and optional assignment metadata.
-Use the companion `projectbot` skill when the user has assigned a chief or requests
-that orchestration role; installation alone does not assign one. The record
-format remains usable without a chief. These commands are conversational conventions,
-not an installed CLI or background service.
-
-If `.todo/projects/PROJECT.md` exists, or a worker packet supplies a managed control
-directory, read the extension and relevant project record before changing lists.
-Honor its lifecycle, existing assignments, and single-writer ownership so simple
-Todo commands do not duplicate work or overwrite a chief's updates. This check
-does not enable scheduling or create a chief.
-Resolve an explicitly named subproject to its own list directory; otherwise keep
-the root list as the default. Treat all later list paths as relative to that scope.
+Use the root lists unless a subproject is named. For a subproject, the list paths
+below refer to its own directory.
 
 ## Scope and storage
 
@@ -101,12 +90,9 @@ Use this format for all managed files.
   assigned, blocked, paused, or cancelled items and items with unmet dependencies.
   Preserve their IDs and metadata. A request to pop does not silently resume a
   sleeping or cancelled project; explain its state if there is no eligible work.
-- Before starting a managed item, have the designated writer record its active
-  attempt and current worker binding, including when this chat does the work.
-  If no chief or other writer is assigned to this scope, the current agent may
-  maintain the records and implement the item directly; no Projectbot is required.
-  If that reservation cannot be made safely, report the ownership blocker instead
-  of starting an untracked duplicate. Apply the extension's acceptance rules at completion.
+- Record who is doing a managed item before starting it. Coordinate with its
+  assigned writer, or maintain it yourself if none is assigned. Check for existing
+  work so popping an item doesn't launch a duplicate.
 - If no open items exist, report that the list is already clear.
 - Treat popping an item as accepting the work now, not just removing it from the list.
 - Read and follow the current project's instructions before implementing, including AGENTS.md and any referenced project docs.
