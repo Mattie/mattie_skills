@@ -7,7 +7,6 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | Suite | Skills | Description |
 | --- | --- | --- |
 | [ReadMe Driven Development (RMDD)](docs/rmdd.md) | [`rmds`](skills/rmds/), [`rmdd`](skills/rmdd/), [`rmdv`](skills/rmdv/) | Your agent treats your ReadMe as desired state and implements everything that's different. <br/> Workflow: <br/> *Desired state → implementation → [optional validation / clarification] → repeat* |
-
 | [Project management](docs/project-management.md) | [`todo`](skills/todo/), [`projectbot`](skills/projectbot/) | Local work tracking with optional project chiefs, focused workers, and a chief-of-staff view. |
 
 ## Skills
