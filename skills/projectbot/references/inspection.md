@@ -10,9 +10,9 @@ initialize a chief, adopt chats, or grant permission to message anyone.
    project ID, and directory. Resolve duplicate names using those identities.
    `local` is relative to the executing host; check the returned machine name.
 2. Run the inspector on that host through available filesystem/command tools.
-   If the remote Dot lacks local execution, use an already-authorized local
+   If the remote assistant lacks local execution, use an already-authorized local
    helper thread, or ask for the missing authorization to create one. A skill
-   installed on the local machine is not automatically installed in the Dot.
+   installed on the local machine is not automatically available to that assistant.
 3. Read `selected_project` and locate that ID in `tree`. Its `chief` is the
    recorded binding, including observed reachability if supplied. Traverse
    `children` for subprojects and `tasks[].worker` for work chats. Follow explicit
@@ -71,6 +71,9 @@ Paths are relative to the checkout root. The most specific matching path wins;
 equal matches return `ambiguous`. Without path mappings the root is selected.
 `--project-id` selects a known ID within the discovered tree; it is not a global
 project registry. Parent IDs, not directory nesting, define recursive ownership.
+With external control storage and no local project brief or Git boundary, the
+workspace root is unknown. If source-path mappings exist, selection is ambiguous;
+use `--project-id` to choose the intended scope explicitly.
 
 ## Optional chat snapshot
 

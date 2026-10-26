@@ -21,6 +21,7 @@ with the consuming task. Check its actual status rather than copying the produce
 backlog. Bring priority conflicts or circular dependencies to the human when they
 need a decision.
 
-MStatus can provide a project index and receive meaningful receipts under its own
-policy. Keep task tracking in Todo and respect MStatus's human-owned curation.
-This integration is optional.
+MStatus is an optional personal project tracker, available through a separately
+installed skill. When present, it can index projects and receive short records of
+meaningful progress under that skill's policy. Keep task tracking in Todo and leave
+the tracker's organization under human control. Without MStatus, skip this integration.

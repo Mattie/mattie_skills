@@ -132,6 +132,38 @@ class InspectorTests(unittest.TestCase):
         self.tasks("## Open\n```markdown\n- [ ] Example\n```\n- [ ] Real work\n")
         self.assertEqual(inspector.inspect(self.root)["tree"]["task_counts"], {"queued": 1})
 
+    def test_mistyped_metadata_is_partial_not_queued(self):
+        self.project()
+        for field in ("  - State: active", "  - state : active", "    - state: active"):
+            with self.subTest(field=field):
+                self.tasks("## Open\n- [ ] Already running\n" + field + "\n")
+                report = inspector.inspect(self.root)
+                self.assertEqual(report["status"], "partial")
+                self.assertFalse(report["tree"]["counts_complete"])
+                self.assertEqual(report["tree"]["tasks"], [])
+                self.assertTrue(any("Malformed item metadata" in d for d in report["diagnostics"]))
+        self.tasks("## Open\n- [ ] Ordinary task\n    - A prose note without metadata\n")
+        self.assertEqual(inspector.inspect(self.root)["tree"]["task_counts"], {"queued": 1})
+
+    def test_external_control_without_workspace_needs_explicit_scope(self):
+        self.project()
+        self.project("search", "root", source_paths=["src/search"])
+        external = self.root / "external-control"
+        self.control.rename(external)
+        for path in external.glob("projects/**/PROJECT.md"):
+            path.write_text(path.read_text(encoding="utf-8").replace(str(self.control), str(external)),
+                            encoding="utf-8")
+        directory = self.root / "src/search"
+        directory.mkdir(parents=True)
+        report = inspector.inspect(directory, control_root=external)
+        self.assertEqual(report["status"], "ambiguous")
+        self.assertIsNone(report["selected_project"])
+        self.assertEqual(set(report["selection_candidates"]), {"root", "search"})
+        self.assertTrue(any("Workspace root is unknown" in d for d in report["diagnostics"]))
+        report = inspector.inspect(directory, control_root=external, project_id="search")
+        self.assertEqual(report["status"], "ok")
+        self.assertEqual(report["selected_project"], "search")
+
     def test_nested_unmanaged_git_repo_does_not_inherit_outer_chief(self):
         self.project()
         nested = self.root / "other"

@@ -1,6 +1,6 @@
 ---
 name: todo
-description: Manage local .todo lists for bugs, ideas, features, and tasks. When explicitly asked to manage project progress, queues, or project chiefs, use the project-management extension.
+description: Manage local .todo lists for bugs, ideas, features, and tasks. For coordinated project work, use the included references/project-management.md record format. Todo works independently of Projectbot.
 ---
 
 # Todo

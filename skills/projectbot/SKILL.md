@@ -59,8 +59,10 @@ start. Repeating init preserves the project's current state.
 
 Read existing assignments before launching more work. Choose the next useful step
 from the goal, dependencies, and available capacity. Continue through review and
-revision while the requested work and run limits allow it; stop at completion,
-a real blocker, or a useful handoff. There's no fixed number of dispatch rounds.
+revision within the brief's mandate and any time or spending limits the human sets.
+Keep the agreed worker limit (two by default); stop at completion, a real blocker,
+or a useful handoff. Ask before expanding the mandate. There's no fixed number of
+dispatch rounds.
 
 Use existing authorization without asking for it again. Follow the current harness's
 rules for creating and messaging chats. A status question calls for inspection and

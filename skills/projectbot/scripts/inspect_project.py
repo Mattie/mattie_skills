@@ -206,6 +206,8 @@ def read_tasks(path, control):
                 if name in current["metadata"]:
                     raise RecordError(f"Duplicate item field {name}: {path}:{line_number}")
                 current["metadata"][name] = value
+        elif current and re.match(r"^\s+-\s+[A-Za-z_][\w-]*\s*:", line):
+            raise RecordError(f"Malformed item metadata: {path}:{line_number}; use two spaces and lowercase keys")
     for item in items:
         meta = item.pop("metadata")
         state = meta.get("state", "done" if item["checked"] else "queued")
@@ -388,6 +390,8 @@ def inspect(directory, *, control_root=None, project_id=None, snapshot=None,
 
         roll_up(root)
         selected, best = [root["id"]], -1
+        workspace_known = ((workspace / ".git").exists()
+                           or (workspace / ".todo/projects/PROJECT.md").is_file())
         relative = directory.relative_to(workspace)
         for node in nodes.values():
             for scope in node["source_paths"]:
@@ -398,12 +402,17 @@ def inspect(directory, *, control_root=None, project_id=None, snapshot=None,
                         selected, best = [node["id"]], depth
                     elif depth == best and node["id"] not in selected:
                         selected.append(node["id"])
+        selection_unknown = (not workspace_known and not project_id
+                             and any(node["source_paths"] for node in nodes.values()))
+        if selection_unknown:
+            selected = list(nodes)
+            report["diagnostics"].append("Workspace root is unknown; select a scope with --project-id.")
         if project_id:
             if project_id not in nodes:
                 raise RecordError(f"Unknown project ID in this tree: {project_id}")
             selected = [project_id]
         report.update(status="partial" if report["diagnostics"] else "ok", tree=root)
-        if len(selected) == 1:
+        if len(selected) == 1 and not selection_unknown:
             report["selected_project"] = selected[0]
         else:
             report.update(status="ambiguous", selection_candidates=selected)
