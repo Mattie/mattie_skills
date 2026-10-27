@@ -202,6 +202,8 @@ def read_tasks(path, control):
             items.append(current)
         elif current and re.match(r"^  - [a-z_]+:", line):
             field = load_yaml(line[4:])
+            if not isinstance(field, dict):
+                raise RecordError(f"Malformed item metadata: {path}:{line_number}; expected a key/value mapping")
             for name, value in field.items():
                 if name in current["metadata"]:
                     raise RecordError(f"Duplicate item field {name}: {path}:{line_number}")
@@ -234,7 +236,7 @@ def join_chats(nodes, snapshot, workspace, control, host_id, now, max_age):
     if inventory["coverage"] not in {"partial", "complete", "unknown"}:
         raise RecordError("Snapshot coverage must be partial, complete, or unknown")
     project_roots = {workspace.resolve()}
-    if control:
+    if control and (workspace / ".git").exists() and control == git_common_control(workspace):
         project_roots.add(control.parent.resolve())
     project_ids = {
         (p.get("harness", "codex"), p.get("projectId")) for p in snapshot.get("projects", [])

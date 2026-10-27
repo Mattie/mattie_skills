@@ -164,6 +164,32 @@ class InspectorTests(unittest.TestCase):
         self.assertEqual(report["status"], "ok")
         self.assertEqual(report["selected_project"], "search")
 
+    def test_scalar_metadata_keeps_other_lists_in_cli_report(self):
+        self.project()
+        self.tasks("## Open\n- [ ] Broken metadata\n  - state:active\n")
+        (self.control / "features.md").write_text("## Open\n- [ ] Valid task\n", encoding="utf-8")
+        result = subprocess.run([sys.executable, str(SCRIPT), str(self.root)],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report["status"], "partial")
+        self.assertEqual([task["text"] for task in report["tree"]["tasks"]], ["Valid task"])
+        self.assertTrue(any("Malformed item metadata" in d for d in report["diagnostics"]))
+
+    def test_external_storage_parent_does_not_own_unrelated_chats(self):
+        self.control = self.root / "control"
+        self.project()
+        workspace = self.root / "app"
+        workspace.mkdir()
+        snapshot = {
+            "projects": [{"projectId": "parent", "hostId": "local", "path": str(self.root)}],
+            "threads": [
+                {"id": "foreign-cwd", "hostId": "local", "cwd": str(self.root / "other")},
+                {"id": "foreign-project", "hostId": "local", "projectId": "parent"},
+                {"id": "ours", "hostId": "local", "cwd": str(workspace)}]}
+        report = inspector.inspect(workspace, control_root=self.control, snapshot=snapshot)
+        self.assertEqual([chat["thread"] for chat in report["unassigned_chats"]], ["ours"])
+
     def test_nested_unmanaged_git_repo_does_not_inherit_outer_chief(self):
         self.project()
         nested = self.root / "other"
@@ -177,11 +203,15 @@ class InspectorTests(unittest.TestCase):
         worktree.mkdir()
         (worktree / ".git").write_text("gitdir: unused\n", encoding="utf-8")
         result = subprocess.CompletedProcess([], 0, str(self.root / ".git") + "\n", "")
+        snapshot = {
+            "projects": [{"projectId": "primary", "hostId": "local", "path": str(self.root)}],
+            "threads": [{"id": "primary-worker", "hostId": "local", "projectId": "primary"}]}
         with patch.object(inspector.subprocess, "run", return_value=result):
-            report = inspector.inspect(worktree)
+            report = inspector.inspect(worktree, snapshot=snapshot)
         self.assertEqual(report["control_root"], str(self.control))
         self.assertEqual(report["selected_project"], "root")
         self.assertFalse((worktree / ".todo").exists())
+        self.assertEqual([chat["thread"] for chat in report["unassigned_chats"]], ["primary-worker"])
 
     def test_equal_source_scopes_are_ambiguous_until_explicitly_selected(self):
         self.project()
