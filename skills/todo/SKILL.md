@@ -1,6 +1,6 @@
 ---
 name: todo
-description: Use when the user wants to create, maintain, or resolve local project TODO lists in .todo files. Supports push/pop/search/analyze/summarize operations for bugs, ideas, features, tasks, or any user-defined list type.
+description: Manage local .todo lists for bugs, ideas, features, and tasks. When explicitly asked to manage project progress, queues, or project chiefs, use the included references/project-management.md along with the projectbot skill if needed.
 ---
 
 # Todo
@@ -9,9 +9,24 @@ This skill manages local, project-specific task tracking in markdown files under
 
 Use this skill whenever the user asks to track, triage, clean up, summarize, search, or resolve entries in local TODO files.
 
+Todo works independently. Use Projectbot when the human wants a project chief;
+ordinary Todo work needs no chief or worker setup.
+
+## Project-management requests
+
+For coordinated work, read [the project records reference](references/project-management.md).
+Also read it and the relevant brief when `.todo/projects/PROJECT.md` already exists
+or an assignment supplies a control directory. Respect current assignments,
+lifecycle, and record ownership before changing lists. The records can be used
+without Projectbot; installation alone doesn't assign a chief.
+
+Use the root lists unless a subproject is named. For a subproject, the list paths
+below refer to its own directory.
+
 ## Scope and storage
 
-- All files live under the current project root in `.todo/<type>.md`.
+- Ordinary list files live under the current project root in `.todo/<type>.md`.
+  Managed subprojects use the locations defined by the extension.
 - Supported types:
   - `bugs.md`
   - `ideas.md`
@@ -20,7 +35,9 @@ Use this skill whenever the user asks to track, triage, clean up, summarize, sea
 - Any other user-defined type maps to `<normalized type>.md` in `.todo/` (for example: `todo chore` -> `.todo/chore.md`).
 - Do not create files unless explicitly needed by the user command.
 - If `.todo/` does not exist, create it only when a command needs it.
-- Ignore `.` and hidden paths when searching project files; do not touch non-TODO artifacts.
+- Search the intended `.todo/` files explicitly; avoid unrelated hidden paths.
+  List maintenance changes tracking files only. `pop` also authorizes the selected
+  implementation work under the project's normal instructions.
 
 ## Canonical list format
 
@@ -69,6 +86,13 @@ Use this format for all managed files.
 
 - Determine the target list file from `<type>`.
 - Take the top unchecked item in `## Open`.
+- For managed items, take the first eligible queued item in list order. Skip
+  assigned, blocked, paused, or cancelled items and items with unmet dependencies.
+  Preserve their IDs and metadata. A request to pop does not silently resume a
+  sleeping or cancelled project; explain its state if there is no eligible work.
+- Record who is doing a managed item before starting it. Coordinate with its
+  assigned writer, or maintain it yourself if none is assigned. Check for existing
+  work so popping an item doesn't launch a duplicate.
 - If no open items exist, report that the list is already clear.
 - Treat popping an item as accepting the work now, not just removing it from the list.
 - Read and follow the current project's instructions before implementing, including AGENTS.md and any referenced project docs.
@@ -87,6 +111,8 @@ Use this format for all managed files.
 ### `search todo <query>`
 
 - Search all markdown files in `.todo/` for the query.
+- In ordinary mode, search direct list files only. Project-management searches
+  can include subproject lists, excluding project records from item counts.
 - Return grouped results with:
   - file
   - section (Open/Completed)
@@ -101,6 +127,9 @@ Use this format for all managed files.
   - open count
   - completed count
   - completion percentage
+- Label percentages as list-item completion, not overall project progress. For
+  managed lists, report cancelled items separately and exclude them from the
+  completion denominator.
 - Flag files with:
   - no file
   - missing sections
