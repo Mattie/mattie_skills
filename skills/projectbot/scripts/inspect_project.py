@@ -213,7 +213,7 @@ def read_tasks(path, control):
     for item in items:
         meta = item.pop("metadata")
         state = meta.get("state", "done" if item["checked"] else "queued")
-        if state not in TASK_STATES:
+        if not isinstance(state, str) or state not in TASK_STATES:
             raise RecordError(f"Invalid task state: {path}:{item['line']}")
         if item["checked"] != (state == "done") or item["checked"] != (item["section"] == "Completed"):
             raise RecordError(f"Checkbox, section, and task state disagree: {path}:{item['line']}")

@@ -166,15 +166,17 @@ class InspectorTests(unittest.TestCase):
 
     def test_scalar_metadata_keeps_other_lists_in_cli_report(self):
         self.project()
-        self.tasks("## Open\n- [ ] Broken metadata\n  - state:active\n")
         (self.control / "features.md").write_text("## Open\n- [ ] Valid task\n", encoding="utf-8")
-        result = subprocess.run([sys.executable, str(SCRIPT), str(self.root)],
-                                capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        report = json.loads(result.stdout)
-        self.assertEqual(report["status"], "partial")
-        self.assertEqual([task["text"] for task in report["tree"]["tasks"]], ["Valid task"])
-        self.assertTrue(any("Malformed item metadata" in d for d in report["diagnostics"]))
+        for field in ("state:active", "state: [active]", "state: {value: active}"):
+            with self.subTest(field=field):
+                self.tasks("## Open\n- [ ] Broken metadata\n  - " + field + "\n")
+                result = subprocess.run([sys.executable, str(SCRIPT), str(self.root)],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                report = json.loads(result.stdout)
+                self.assertEqual(report["status"], "partial")
+                self.assertEqual([task["text"] for task in report["tree"]["tasks"]], ["Valid task"])
+                self.assertTrue(any("tasks.md" in d for d in report["diagnostics"]))
 
     def test_external_storage_parent_does_not_own_unrelated_chats(self):
         self.control = self.root / "control"
