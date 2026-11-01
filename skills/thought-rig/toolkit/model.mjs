@@ -85,7 +85,9 @@ export function fromCanvasDocument(canvas, canonicalBase={}) {
   for(const o of objects)if(canonicalBase.schemaVersion!==2&&!baselineById.has(o.id)){
     const original=canvas.originals?.[o.id];baselineById.set(o.id,original?nodeFromLegacy(original,o.parentId,o):clone(o));baselineById.get(o.id).type=o.type;
   }
-  const result={...clone(canonicalBase),...Object.fromEntries(Object.entries(canvas).filter(([k])=>!['frames','groups','originals','_unrepresentedObjects','schemaVersion','objects','baseline'].includes(k))),schemaVersion:2,objects,baseline:[...baselineById.values()],resetOriginals:clone(canvas.originals||{})};
+  // A canonical projection carries the full document, including intentional field removals.
+  const inherited=Array.isArray(canvas.objects)?{}:clone(canonicalBase);
+  const result={...inherited,...Object.fromEntries(Object.entries(canvas).filter(([k])=>!['frames','groups','originals','_unrepresentedObjects','schemaVersion','objects','baseline'].includes(k))),schemaVersion:2,objects,baseline:[...baselineById.values()],resetOriginals:clone(canvas.originals||{})};
   return validateDocument(result);
 }
 

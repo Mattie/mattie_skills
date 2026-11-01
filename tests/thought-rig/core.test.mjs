@@ -175,6 +175,18 @@ test('canonical transaction metadata and explicit baseline edits survive the can
   assert.deepEqual(readback(saved).changes,[]);
 });
 
+test('canonical field deletions survive projection, export and reopening',t=>{
+  const root=createWorkspace(path.join(temporary(t),'workspace')),base=readJSON(path.join(root,'state.json'));
+  base.source={identity:'previous-source'};base.metadata={obsolete:true};base.retained={value:42};
+  const draft=structuredClone(base);delete draft.source;delete draft.metadata;
+  const saved=fromCanvasDocument(toCanvasDocument(draft),base);
+  for(const doc of [saved,fromCanvasDocument(toCanvasDocument(JSON.parse(JSON.stringify(saved))),base)]){
+    assert.equal(Object.hasOwn(doc,'source'),false);assert.equal(Object.hasOwn(doc,'metadata'),false);
+    assert.deepEqual(doc.retained,base.retained);assert.equal(doc.title,base.title);
+    assert.deepEqual(doc.notes,base.notes);assert.deepEqual(doc.baseline,base.baseline);
+  }
+});
+
 test('readback attributes root edits only to explicitly matching event targets',()=>{
   const objects=['a','b'].map(id=>({id,type:'test:root',data:{value:1}}));
   const doc={schemaVersion:2,revision:0,objects,baseline:structuredClone(objects),notes:[],events:[
