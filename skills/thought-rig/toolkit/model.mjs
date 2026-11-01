@@ -58,7 +58,16 @@ export function toCanvasDocument(document) {
     frames.push({id,_virtual:true,locked:true,kind:'screen',label:'Ungrouped objects',description:'Independent spatial objects',x:0,y:0,w:Math.max(600,...loose.map(o=>o.geometry.x+o.geometry.w)),h:Math.max(400,...loose.map(o=>o.geometry.y+o.geometry.h)),pieces:loose.map(legacyObject),baseline:doc.baseline.filter(o=>loose.some(p=>p.id===o.id)).map(legacyObject),controls:[],variants:{},variant:'Original'});
   }
   const represented=new Set([...frames,...groups,...frames.flatMap(f=>f.pieces)].map(o=>o.id));
-  const originals=clone(doc.resetOriginals||{});for(const o of doc.baseline)originals[o.id]=legacyObject(o);
+  const originals=clone(doc.resetOriginals||{}),baselineById=new Map(doc.baseline.map(o=>[o.id,o]));
+  for(const o of doc.baseline){
+    const retained=originals[o.id];originals[o.id]=legacyObject(o);
+    if(o.type==='core:group'){
+      originals[o.id]={...retained,...originals[o.id],members:(o.data.frameIds||[]).map(id=>{
+        const geometry=baselineById.get(id)?.geometry;
+        return geometry?{id,x:geometry.x,y:geometry.y}:retained?.members?.find(member=>member.id===id);
+      }).filter(Boolean)};
+    }
+  }
   for(const f of frames){if(originals[f.id]){originals[f.id].kind=f.kind; originals[f.id].pieces=clone(f.baseline);}}
   return {...doc,schemaVersion:1,frames,groups,originals,_unrepresentedObjects:doc.objects.filter(o=>!represented.has(o.id))};
 }

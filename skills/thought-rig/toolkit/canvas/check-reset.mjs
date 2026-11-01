@@ -47,4 +47,17 @@ for(const [type,field,before,after] of [['text','text','Original text','Edited t
  const exported=fromCanvasDocument(actual.document,source);
  assert.equal(exported.objects.find(o=>o.id==='built').data[field],before);assert.deepEqual(exported.notes,source.notes);
 }
-console.log('PASS: selection stays clean; custom and built-in content reset, geometry-only reset, undo/redo, export, and notes.');
+const group={id:'group',type:'core:group',data:{label:'Option A',frameIds:['frame']}};
+const grouped={...structuredClone(canonical),objects:[{...structuredClone(frame),geometry:{...frame.geometry,x:250}},group],baseline:structuredClone([frame,group]),notes:[{id:'group-note',targetId:'group',text:'Keep this option'}],resetOriginals:{group:{members:[{id:'frame',x:75,y:25}],capturedAt:'retained'}}};
+sandbox.fixture=toCanvasDocument(grouped);
+const groupReset=JSON.parse(vm.runInContext(`(()=>{
+ doc=fixture;past=[];future=[];selected=[];migrateDocument();resetTarget('group','position');
+ const restored=object('frame').x;undo();const undone=object('frame').x;undo(true);
+ return JSON.stringify({restored,undone,redone:object('frame').x,document:doc});
+})()`,sandbox));
+assert.equal(groupReset.restored,0);assert.equal(groupReset.undone,250);assert.equal(groupReset.redone,0);
+const groupExport=fromCanvasDocument(groupReset.document,grouped);
+assert.deepEqual(groupExport.notes,grouped.notes);
+assert.equal(toCanvasDocument(groupExport).originals.group.members[0].x,0);
+assert.equal(toCanvasDocument(groupExport).originals.group.capturedAt,'retained');
+console.log('PASS: selection stays clean; built-in/custom/group resets, geometry-only reset, undo/redo, export, and notes.');
