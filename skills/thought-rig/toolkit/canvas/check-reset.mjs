@@ -108,4 +108,14 @@ assert.equal(webElement.removed,true);assert.equal(vm.runInContext('paneEls.has(
 vm.runInContext('undo()',sandbox);
 webElement=vm.runInContext('paneEls.get('+JSON.stringify(webId)+')',sandbox);
 assert.equal(webElement.firstChild.src,'http://127.0.0.1:5320/second');
-console.log('PASS: selection stays clean; built-in/custom/group resets, nonspatial host notes, undo/redo, export, and readback.');
+let mountedDocument=null,registeredAfterPanel=false;
+const startup={...sandbox,fetch:async url=>({ok:true,json:async()=>url==='/api/manifest'?{extensions:[{id:'startup-test',module:'extensions/startup-test.mjs'}]}:structuredClone(canonical)}),initialPanelModule:{register(host){
+ host.registerPanel({id:'test:startup',label:'Startup',mount({host}){mountedDocument=host.getDocument()}});
+ host.registerType('test:after-panel',{defaults:{data:{label:'After panel'}}});registeredAfterPanel=true;
+}}};
+startup.window=startup;vm.createContext(startup);
+for(const name of ['app.js','enhancements.js'])vm.runInContext(fs.readFileSync(new URL(name,import.meta.url),'utf8'),startup);
+await vm.runInContext(hostSource.replace('await import(localModuleURL(extension.module,location.href))','initialPanelModule'),startup);
+assert.equal(mountedDocument.title,canonical.title);assert.equal(mountedDocument.objects[0].id,'frame');
+assert.equal(registeredAfterPanel,true);
+console.log('PASS: panel startup can read state; pane synchronization, resets, nonspatial notes, undo/redo, export, and readback.');

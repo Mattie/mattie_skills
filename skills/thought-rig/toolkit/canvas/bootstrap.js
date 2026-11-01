@@ -111,7 +111,9 @@
  for(const key of ['addControl','applyOption','addNote','setDescription','createGroup','ungroup','tidyGroup','resetTarget'])if(typeof window.placementRig[key]==='function'){const fn=window.placementRig[key];window.placementRig[key]=(...args)=>withActor('agent',()=>fn(...args))}
  try{
   const response=await fetch('/api/manifest');if(!response.ok)throw Error('Workspace manifest unavailable');const manifest=await response.json();
+  // Registration may mount panels that immediately inspect or edit the document.
+  const stateResponse=await fetch('/api/state');if(!stateResponse.ok)throw Error('Workspace document unavailable');const incoming=await stateResponse.json();model.validateDocument(incoming);canonicalBase=clone(incoming);doc=model.toCanvasDocument(incoming);savedRevision=incoming.revision;dirty=false;
   for(const extension of manifest.extensions||[]){try{const module=await import(localModuleURL(extension.module,location.href));if(typeof module.register!=='function')throw Error('Extension needs register(host)');module.register(host);modules.push(module)}catch(error){console.error(error);const warning=document.createElement('div');warning.className='extension-warning';warning.textContent=`Extension ${extension.id||extension.module} unavailable: ${error.message}`;document.body.append(warning)}}
-  const stateResponse=await fetch('/api/state');if(!stateResponse.ok)throw Error('Workspace document unavailable');const incoming=await stateResponse.json();model.validateDocument(incoming);canonicalBase=clone(incoming);doc=model.toCanvasDocument(incoming);savedRevision=incoming.revision;dirty=false;if(incoming.camera)camera=incoming.camera;else fit();status();draw();refreshExtensionChrome();emit(stateListeners,canonical());
+  if(incoming.camera)camera=incoming.camera;else fit();status();draw();refreshExtensionChrome();emit(stateListeners,canonical());
  }catch(error){$('saveStatus').textContent='Could not load workspace';toast(error.message);console.error(error)}
 })().catch(error=>{console.error(error);$('saveStatus').textContent='Toolkit failed to start';toast(error.message)});
