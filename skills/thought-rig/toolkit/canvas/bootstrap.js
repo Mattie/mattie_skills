@@ -73,7 +73,17 @@
   if(selected.includes(p.id)){ctx.strokeStyle='#ad86ff';ctx.lineWidth=2/camera.z;ctx.strokeRect(0,0,w,h);for(const [x,y]of [[0,0],[w,0],[0,h],[w,h]]){ctx.fillStyle='#fff';ctx.fillRect(x-4/camera.z,y-4/camera.z,8/camera.z,8/camera.z)}ctx.beginPath();ctx.moveTo(w/2,0);ctx.lineTo(w/2,-25/camera.z);ctx.stroke();ctx.beginPath();ctx.arc(w/2,-25/camera.z,5/camera.z,0,7);ctx.fill();ctx.stroke()}ctx.restore();
  };
  window.hitRegisteredPiece=(point,p)=>{const node=nodeForPiece(p),definition=registry.types.get(node.type);return definition?.hitTest?!!definition.hitTest({point,object:node}):rectangleHit({point,object:node})};
- syncPanes=()=>{for(const [id,el]of paneEls)if(!doc.frames.some(f=>f.id===id)){el.remove();paneEls.delete(id)}for(const f of doc.frames.filter(f=>f.kind==='web')){let el=paneEls.get(f.id);if(!el){el=document.createElement('div');el.className='webpane';registry.types.get('core:web').mountDOM({element:el,object:{id:f.id,type:'core:web',data:f,geometry:geometryOf(f)},host});$('panes').append(el);paneEls.set(f.id,el)}el.style.width=f.w+'px';el.style.height=f.h+'px';el.style.transform=`translate(${camera.x+f.x*camera.z}px,${camera.y+f.y*camera.z}px) scale(${camera.z})`;el.classList.toggle('live',interacting===f.id)}};
+ syncPanes=()=>{
+  for(const [id,el]of paneEls)if(!doc.frames.some(f=>f.id===id&&f.kind==='web')){el.remove();paneEls.delete(id)}
+  for(const f of doc.frames.filter(f=>f.kind==='web')){
+   let el=paneEls.get(f.id);
+   if(!el){el=document.createElement('div');el.className='webpane';registry.types.get('core:web').mountDOM({element:el,object:{id:f.id,type:'core:web',data:f,geometry:geometryOf(f)},host});$('panes').append(el);paneEls.set(f.id,el)}
+   const iframe=el.firstChild,url=new URL(f.url,location.origin).href;
+   if(iframe.src!==url)iframe.src=url;
+   iframe.title=f.label||'Embedded rig';
+   el.style.width=f.w+'px';el.style.height=f.h+'px';el.style.transform=`translate(${camera.x+f.x*camera.z}px,${camera.y+f.y*camera.z}px) scale(${camera.z})`;el.classList.toggle('live',interacting===f.id);
+  }
+ };
 
  const baseInspector=renderInspector;
  renderInspector=()=>{baseInspector();inspector.replaceChildren();if(!selected.length)return;const node=canonicalNode(selected[0]);if(!node)return;const definition=registry.types.get(node.type);

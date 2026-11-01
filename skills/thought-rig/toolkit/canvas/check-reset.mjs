@@ -8,7 +8,7 @@ const {toCanvasDocument,fromCanvasDocument,readback}=model;
 
 // Exercise the actual reset/undo implementation, without a server or saved-state writes.
 const drawing=new Proxy({}, {get:(_,key)=>key==='createLinearGradient'?()=>({addColorStop(){}}):()=>{}});
-function element(){return {hidden:false,style:{},classList:{add(){},remove(){},toggle(){}},append(){},before(){},after(){},remove(){},replaceChildren(){},setAttribute(){},addEventListener(){},removeEventListener(){},getContext:()=>drawing,getBoundingClientRect:()=>({width:1440,height:900,left:0,top:0}),clientWidth:1440,clientHeight:900,querySelector:()=>element(),querySelectorAll:()=>[],focus(){}}}
+function element(){return {hidden:false,style:{},classList:{add(){},remove(){},toggle(){}},append(child){this.firstChild ||= child},before(){},after(){},remove(){this.removed=true},replaceChildren(){},setAttribute(){},addEventListener(){},removeEventListener(){},getContext:()=>drawing,getBoundingClientRect:()=>({width:1440,height:900,left:0,top:0}),clientWidth:1440,clientHeight:900,querySelector:()=>element(),querySelectorAll:()=>[],focus(){}}}
 const elements=new Map(),get=id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id)};
 const frame={id:'frame',type:'core:frame',geometry:{x:0,y:0,w:800,h:500},data:{label:'Test'}};
 const cue={id:'cue',type:'demo:cue',parentId:'frame',geometry:{x:30,y:40,w:220,h:100},data:{label:'Original cue',durationSeconds:3}};
@@ -62,6 +62,20 @@ const groupExport=fromCanvasDocument(groupReset.document,grouped);
 assert.deepEqual(groupExport.notes,grouped.notes);
 assert.equal(toCanvasDocument(groupExport).originals.group.members[0].x,0);
 assert.equal(toCanvasDocument(groupExport).originals.group.capturedAt,'retained');
+// Frame content resets use the same path, retaining identity and notes.
+const described=structuredClone(canonical);described.objects[0].data.description='Original caption';described.baseline[0].data.description='Original caption';
+sandbox.fixture=toCanvasDocument(described);
+const frameReset=JSON.parse(vm.runInContext(`(()=>{
+ doc=fixture;past=[];future=[];selected=[];migrateDocument();
+ setDescription('frame','Edited caption','Edited title');object('frame').x=120;
+ resetTarget('frame','position');const partial={label:object('frame').label,description:object('frame').description};
+ resetTarget('frame','all');const restored=clone(object('frame'));undo();const undone=clone(object('frame'));undo(true);
+ return JSON.stringify({partial,restored,undone,document:doc});
+})()`,sandbox));
+assert.equal(frameReset.partial.label,'Edited title');assert.equal(frameReset.partial.description,'Edited caption');
+assert.equal(frameReset.restored.label,'Test');assert.equal(frameReset.restored.description,'Original caption');
+assert.equal(frameReset.undone.label,'Edited title');assert.equal(frameReset.undone.description,'Edited caption');
+assert.deepEqual(fromCanvasDocument(frameReset.document,canonical).notes,canonical.notes);
 // Start the real host against the same DOM stubs; substitute module loading only.
 sandbox.modelModule=model;sandbox.registryModule=registryModule;
 sandbox.fixture=toCanvasDocument(canonical);
@@ -81,4 +95,17 @@ vm.runInContext('undo(true)',sandbox);
 const reopened=fromCanvasDocument(toCanvasDocument(host.getDocument()),host.getDocument());
 assert.equal(readback(reopened).notes.find(n=>n.targetId===claimId).text,'Explain this claim');
 assert.equal(reopened.objects.find(o=>o.id===claimId).geometry,undefined);
+const webId=host.createObject('core:web',{data:{label:'First',url:'/first'}},{actor:'verification'});
+let webElement=vm.runInContext('paneEls.get('+JSON.stringify(webId)+')',sandbox);
+const iframe=webElement.firstChild;assert.equal(iframe.src,'http://127.0.0.1:5320/first');
+let srcWrites=0,sourceURL=iframe.src;
+Object.defineProperty(iframe,'src',{get:()=>sourceURL,set:value=>{srcWrites++;sourceURL=value}});
+vm.runInContext('syncPanes();syncPanes()',sandbox);assert.equal(srcWrites,0,'redraw must not reload the page');
+host.transaction('update-web',draft=>{const node=draft.objects.find(o=>o.id===webId);node.data.url='/second';node.data.label='Second'},{actor:'verification'});
+assert.equal(iframe.src,'http://127.0.0.1:5320/second');assert.equal(iframe.title,'Second');assert.equal(srcWrites,1);
+host.transaction('replace-web',draft=>{const node=draft.objects.find(o=>o.id===webId);node.type='core:frame'},{actor:'verification'});
+assert.equal(webElement.removed,true);assert.equal(vm.runInContext('paneEls.has('+JSON.stringify(webId)+')',sandbox),false);
+vm.runInContext('undo()',sandbox);
+webElement=vm.runInContext('paneEls.get('+JSON.stringify(webId)+')',sandbox);
+assert.equal(webElement.firstChild.src,'http://127.0.0.1:5320/second');
 console.log('PASS: selection stays clean; built-in/custom/group resets, nonspatial host notes, undo/redo, export, and readback.');

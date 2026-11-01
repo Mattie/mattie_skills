@@ -3,7 +3,7 @@ function migrateDocument(){
  if(!doc)return;doc.groups ||= [];doc.originals ||= {};
  for(const f of doc.frames){
   f.pieces ||= [];f.controls ||= [];f.variants ||= {};
-  if(!doc.originals[f.id])doc.originals[f.id]={kind:f.kind,x:f.x,y:f.y,w:f.w,h:f.h,rotation:f.rotation||0,pieces:clone(f.baseline||f.pieces),capturedAt:now(),source:f.baseline?'retained baseline; frame placement at migration':'first observed state'};
+  if(!doc.originals[f.id])doc.originals[f.id]={...clone(f),pieces:clone(f.baseline||f.pieces),capturedAt:now(),source:f.baseline?'retained baseline; frame placement at migration':'first observed state'};
   for(const p of [...(f.baseline||[]),...f.pieces])if(!doc.originals[p.id])doc.originals[p.id]=clone(p);
  }
  for(const g of doc.groups){g.frameIds=g.frameIds.filter(id=>doc.frames.some(f=>f.id===id));if(!doc.originals[g.id])doc.originals[g.id]={x:g.x,y:g.y,members:g.frameIds.map(id=>({id,x:object(id).x,y:object(id).y}))};}
@@ -56,9 +56,9 @@ function resetTarget(id,part='all'){
   if(o.kind==='group'){for(const member of base.members||[]){const f=object(member.id);if(f&&o.frameIds.includes(f.id)){f.x=member.x;f.y=member.y;}}return}
   const fields=part==='position'?['x','y']:part==='size'?['w','h']:part==='rotation'?['rotation']:['x','y','w','h','rotation'];
   for(const key of fields)o[key]=base[key]??(key==='rotation'?0:o[key]);
-  // All restores piece content too, including built-in text/images and added fields.
+  // All restores content too, including panel captions, built-in text/images and added fields.
   // Notes live separately and retain their stable target IDs.
-  if(part==='all'&&!doc.frames.includes(o)){for(const key of Object.keys(o))delete o[key];Object.assign(o,clone(base));}
+  if(part==='all'){const restored=clone(base);restored.id=id;if(!('label' in restored))restored.label=o.label;for(const key of Object.keys(o))delete o[key];Object.assign(o,restored);}
   if(doc.frames.includes(o)&&part==='all'&&o.kind!=='web'){o.pieces=clone(base.pieces);o.variant='Original';o.variants={};o.baseline=clone(base.pieces);selected=[o.id]}
   else if(!doc.frames.includes(o)){frameFor(id).variant='Custom';}
  },{targetId:id,baselineCapturedAt:base.capturedAt});
