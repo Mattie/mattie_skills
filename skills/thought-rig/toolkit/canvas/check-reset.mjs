@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
-import { toCanvasDocument, fromCanvasDocument } from '../model.mjs';
+import { toCanvasDocument, fromCanvasDocument, readback } from '../model.mjs';
 
 // Exercise the actual reset/undo implementation, without a server or saved-state writes.
 const drawing=new Proxy({}, {get:(_,key)=>key==='createLinearGradient'?()=>({addColorStop(){}}):()=>{}});
@@ -14,6 +14,8 @@ const canonical={schemaVersion:2,revision:0,title:'Reset test',objects:[frame,cu
 const sandbox={console,document:{getElementById:get,createElement:element,querySelector:element,body:element()},crypto:webcrypto,devicePixelRatio:1,innerWidth:1440,innerHeight:960,location:{href:'http://127.0.0.1:5320/',origin:'http://127.0.0.1:5320'},fetch:()=>new Promise(()=>{}),URL,Blob,Image:class{},setTimeout:()=>0,clearTimeout(){},addEventListener(){},removeEventListener(){},fixture:toCanvasDocument(canonical)};
 sandbox.window=sandbox;vm.createContext(sandbox);
 for(const name of ['app.js','enhancements.js'])vm.runInContext(fs.readFileSync(new URL(name,import.meta.url),'utf8'),sandbox);
+const opened=JSON.parse(vm.runInContext('doc=fixture;migrateDocument();JSON.stringify(doc)',sandbox));
+assert.deepEqual(readback(fromCanvasDocument(opened,canonical)).changes,[],'opening a frame without a description must not manufacture feedback');
 const result=JSON.parse(vm.runInContext(`
  doc=fixture;migrateDocument();dirty=false;const initialRevision=doc.revision;pick(['cue']);pick([]);const selectionOnly={dirty,revisionUnchanged:doc.revision===initialRevision,eventCount:doc.events.length};const target=object('cue');target.extensionData.durationSeconds=5;target.extensionData.extra='new';target.x=70;
  resetTarget('cue','position');const positionOnly={x:object('cue').x,duration:object('cue').extensionData.durationSeconds};

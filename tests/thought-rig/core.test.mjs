@@ -155,7 +155,9 @@ test('HTTP saves reject stale revisions and reject unsafe origins, hosts, and tr
     assert.equal((await request('/api/state','GET',null,{Host:'attacker.invalid'})).status,403);
     assert.equal((await request('/api/state','POST',{expectedRevision:1,document:doc},{Origin:'https://attacker.invalid'})).status,403);
     assert.equal((await request('/toolkit/%2e%2e/%2e%2e/secret.txt')).status,404);
-    assert.equal((await request('/toolkit/..%2f..%2fsecret.txt')).status,400);
+    assert.equal((await request('/toolkit/..%2f..%2fsecret.txt')).status,404);
+    fs.writeFileSync(path.join(root,'private.txt'),'Undeclared workspace data');
+    for(const url of ['/private.txt','/toolkit/..%2fprivate.txt','/toolkit/..%5cprivate.txt','/assets/..%2fprivate.txt','/toolkit/..%2fstate.json'])assert.equal((await request(url)).status,404,url);
     assert.equal((await request('/state.json')).status,404);
     assert.equal(fs.readFileSync(path.join(root,'state.json'),'utf8'),saved);
   }finally{await new Promise(resolve=>server.close(resolve));}

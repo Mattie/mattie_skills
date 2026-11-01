@@ -2,7 +2,7 @@
 function migrateDocument(){
  if(!doc)return;doc.groups ||= [];doc.originals ||= {};
  for(const f of doc.frames){
-  if(f.description===undefined)f.description=f.kind==='web'?'Explore this page with its own controls; attach feedback to the pane.':'Compare placement and spacing. Drag pieces or try the layout options.';f.pieces ||= [];f.controls ||= [];f.variants ||= {};
+  f.pieces ||= [];f.controls ||= [];f.variants ||= {};
   if(!doc.originals[f.id])doc.originals[f.id]={kind:f.kind,x:f.x,y:f.y,w:f.w,h:f.h,rotation:f.rotation||0,pieces:clone(f.baseline||f.pieces),capturedAt:now(),source:f.baseline?'retained baseline; frame placement at migration':'first observed state'};
   for(const p of [...(f.baseline||[]),...f.pieces])if(!doc.originals[p.id])doc.originals[p.id]=clone(p);
  }

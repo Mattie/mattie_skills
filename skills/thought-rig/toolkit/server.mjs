@@ -25,7 +25,8 @@ export function createServer(root) {
       }
       if(req.method!=='GET')return send(404,{error:'Not found'});
       if(url.pathname==='/'){res.writeHead(302,{Location:'/'+ws.manifest.surface,'Cache-Control':'no-store'});res.end();return;}
-      const name=url.pathname==='/'?ws.manifest.surface:decodeURIComponent(url.pathname.slice(1));
+      // Decode separators before normalizing, so prefix checks see the resolved directory.
+      const name=path.posix.normalize(decodeURIComponent(url.pathname.slice(1)).replaceAll('\\','/'));
       // Only declared runtime/assets/extensions are served, never arbitrary sibling project files.
       const allowed=['toolkit',path.dirname(ws.manifest.surface).split(/[\\/]/)[0],ws.manifest.assets,...ws.manifest.extensions.map(e=>e.module.split(/[\\/]/)[0])];
       if(!allowed.some(prefix=>name===prefix||name.startsWith(prefix+'/')))return send(404,{error:'Not found'});
