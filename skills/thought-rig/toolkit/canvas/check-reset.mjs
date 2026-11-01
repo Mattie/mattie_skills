@@ -13,9 +13,21 @@ const elements=new Map(),get=id=>{if(!elements.has(id))elements.set(id,element()
 const frame={id:'frame',type:'core:frame',geometry:{x:0,y:0,w:800,h:500},data:{label:'Test'}};
 const cue={id:'cue',type:'demo:cue',parentId:'frame',geometry:{x:30,y:40,w:220,h:100},data:{label:'Original cue',durationSeconds:3}};
 const canonical={schemaVersion:2,revision:0,title:'Reset test',objects:[frame,cue],baseline:structuredClone([frame,cue]),notes:[{id:'note',targetId:'cue',text:'Retain my note'}],events:[]};
-const sandbox={console,document:{getElementById:get,createElement:element,querySelector:element,body:element()},crypto:webcrypto,devicePixelRatio:1,innerWidth:1440,innerHeight:960,location:{href:'http://127.0.0.1:5320/',origin:'http://127.0.0.1:5320'},fetch:()=>new Promise(()=>{}),URL,Blob,Image:class{},setTimeout:()=>0,clearTimeout(){},addEventListener(){},removeEventListener(){},fixture:toCanvasDocument(canonical)};
+const windowListeners=new Map();
+const sandbox={console,document:{getElementById:get,createElement:element,querySelector:element,body:element()},crypto:webcrypto,devicePixelRatio:1,innerWidth:1440,innerHeight:960,location:{href:'http://127.0.0.1:5320/',origin:'http://127.0.0.1:5320'},fetch:()=>new Promise(()=>{}),URL,Blob,Image:class{},setTimeout:()=>0,clearTimeout(){},addEventListener(name,fn){if(!windowListeners.has(name))windowListeners.set(name,[]);windowListeners.get(name).push(fn)},removeEventListener(){},fixture:toCanvasDocument(canonical)};
 sandbox.window=sandbox;vm.createContext(sandbox);
 for(const name of ['app.js','enhancements.js'])vm.runInContext(fs.readFileSync(new URL(name,import.meta.url),'utf8'),sandbox);
+const editingTargets=[{target:{tagName:'SPAN',isContentEditable:true}},...['INPUT','TEXTAREA','SELECT'].map(tagName=>({target:{tagName}})),{target:{tagName:'SPAN',closest:()=>({role:'textbox'})}},{target:{tagName:'CANVAS'},defaultPrevented:true},{target:{tagName:'CANVAS'},isComposing:true}];
+for(const input of editingTargets)for(const key of ['Backspace','Delete','ArrowLeft','ArrowRight','z',' ','h','v','n','f']){
+ vm.runInContext("doc=clone(fixture);selected=['cue'];past=[];future=[];space=false;tool='select';menu.hidden=true",sandbox);
+ const state=()=>vm.runInContext('JSON.stringify({doc,selected,space,tool,camera})',sandbox),before=state();
+ const event={key,code:key===' '?'Space':key,ctrlKey:key==='z',preventDefault(){this.defaultPrevented=true},...input};
+ for(const handler of windowListeners.get('keydown'))handler(event);
+ assert.equal(state(),before,`editing ${input.target.tagName} must retain canvas state for ${key}`);
+}
+const normalDelete={key:'Backspace',target:{tagName:'CANVAS'},preventDefault(){}};
+for(const handler of windowListeners.get('keydown'))handler(normalDelete);
+assert.equal(vm.runInContext("!!object('cue')",sandbox),false,'canvas shortcuts still work on the canvas');
 const opened=JSON.parse(vm.runInContext('doc=fixture;migrateDocument();JSON.stringify(doc)',sandbox));
 assert.deepEqual(readback(fromCanvasDocument(opened,canonical)).changes,[],'opening a frame without a description must not manufacture feedback');
 const result=JSON.parse(vm.runInContext(`

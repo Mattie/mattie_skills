@@ -118,7 +118,7 @@ function syncFocusHandles(){
 }
 window.addEventListener('keydown',e=>{
  if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.key.toLowerCase()!=='f'||!menu.hidden)return;
- if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)||e.target.isContentEditable)return;
+ if(ignoreCanvasKey(e))return;
  if(!selected.length)return;e.preventDefault();focusTarget();
 });
 const navigation=document.createElement('div');navigation.id='focusNavigation';navigation.setAttribute('aria-label','Example views');document.querySelector('header .grow').before(navigation);
