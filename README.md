@@ -22,6 +22,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | [`quiet-ux`](skills/quiet-ux/) | Design calm visual artifacts with a concise light view and optional richer guidance. | `less talkative UI`, `quiet interface`, `reduce UI clutter` |
 | [`rrr-review-remedy-respond`](skills/rrr-review-remedy-respond/) | Review active GitHub PR comments, fix verified issues, push remedies, and reply to or resolve each thread. | `RRR`, `review remedy respond` |
 | [`soft-skill-creator`](skills/soft-skill-creator/) | Create, update, or soften skills whose guidance lives in judgment, voice, style, observation, or feel. | `soft skill`, `voice and style`, `qualitative judgment` |
+| [`thought-rig`](skills/thought-rig/) | Build adaptable working surfaces to express intent through layouts, timing, relationships, and notes, with local tools and plugins. | `intent canvas`, `visual feedback`, `interactive workbench` |
 | [`todo`](skills/todo/) | Manage project-local TODO lists for bugs, ideas, features, tasks, and more. | `push todo`, `pop todo`, `search todo`, `analyze todo`, `summarize todo` |
 | [`write-humanly`](skills/write-humanly/) | Draft, rewrite, or review prose for human voice, authorial character, and natural texture. | `human-sounding writing`, `less AI-ish`, `voice matching` |
 | [`write-plainly`](skills/write-plainly/) | Write, rewrite, or review plain-language prose while preserving technical meaning, constraints, and uncertainty. | `plain language`, `plain English`, `audience clarity` |
