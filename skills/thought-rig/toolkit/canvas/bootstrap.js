@@ -29,7 +29,11 @@
   subscribeSelection(listener){selectionListeners.add(listener);return ()=>selectionListeners.delete(listener)},
   transaction,
   select(ids,{actor='agent'}={}){return withActor(actor,()=>pick(ids))},
-  addNote(text,targetId=selected[0],{actor='agent'}={}){return withActor(actor,()=>addNote(text,targetId,actor))},
+  addNote(text,targetId=selected[0],{actor='agent'}={}){
+   if(object(targetId))return withActor(actor,()=>addNote(text,targetId,actor));
+   if(!text.trim()||!canonicalNode(targetId)){toast('Choose an existing object and enter a note.');return}
+   return transaction('note',draft=>{draft.notes.push({id:uid(),targetId,text:text.trim(),at:now(),source:actor})},{actor});
+  },
   focus:focusTarget,
   createObject(type,overrides={},options={}){
    let createdId;transaction('create-object',draft=>{

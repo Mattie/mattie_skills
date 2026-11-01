@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
-import { toCanvasDocument, fromCanvasDocument, readback } from '../model.mjs';
+import * as model from '../model.mjs';
+import * as registryModule from './registry.mjs';
+const {toCanvasDocument,fromCanvasDocument,readback}=model;
 
 // Exercise the actual reset/undo implementation, without a server or saved-state writes.
 const drawing=new Proxy({}, {get:(_,key)=>key==='createLinearGradient'?()=>({addColorStop(){}}):()=>{}});
@@ -60,4 +62,23 @@ const groupExport=fromCanvasDocument(groupReset.document,grouped);
 assert.deepEqual(groupExport.notes,grouped.notes);
 assert.equal(toCanvasDocument(groupExport).originals.group.members[0].x,0);
 assert.equal(toCanvasDocument(groupExport).originals.group.capturedAt,'retained');
-console.log('PASS: selection stays clean; built-in/custom/group resets, geometry-only reset, undo/redo, export, and notes.');
+// Start the real host against the same DOM stubs; substitute module loading only.
+sandbox.modelModule=model;sandbox.registryModule=registryModule;
+sandbox.fixture=toCanvasDocument(canonical);
+vm.runInContext('doc=fixture;past=[];future=[];selected=[]',sandbox);
+const hostSource=fs.readFileSync(new URL('bootstrap.js',import.meta.url),'utf8')
+ .replace("await import('/toolkit/model.mjs')",'modelModule')
+ .replace("await import('/toolkit/canvas/registry.mjs')",'registryModule');
+vm.runInContext(hostSource,sandbox);
+const host=sandbox.thoughtRig;
+host.registerType('test:claim',{defaults:{data:{label:'Claim'}}});
+const claimId=host.createObject('test:claim',{}, {actor:'verification'});
+host.addNote('Explain this claim',claimId,{actor:'verification'});
+assert.equal(host.getDocument().notes.find(n=>n.targetId===claimId).text,'Explain this claim');
+assert.equal(host.getDocument().events.at(-1).actor,'verification');
+vm.runInContext('undo()',sandbox);assert.equal(host.getDocument().notes.some(n=>n.targetId===claimId),false);
+vm.runInContext('undo(true)',sandbox);
+const reopened=fromCanvasDocument(toCanvasDocument(host.getDocument()),host.getDocument());
+assert.equal(readback(reopened).notes.find(n=>n.targetId===claimId).text,'Explain this claim');
+assert.equal(reopened.objects.find(o=>o.id===claimId).geometry,undefined);
+console.log('PASS: selection stays clean; built-in/custom/group resets, nonspatial host notes, undo/redo, export, and readback.');
