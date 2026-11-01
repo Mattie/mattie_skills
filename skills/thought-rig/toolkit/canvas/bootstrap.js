@@ -7,7 +7,9 @@
  const canonical=()=>model.fromCanvasDocument({...doc,camera},canonicalBase||{});
  const withActor=(actor,fn)=>{const previous=operationActor;operationActor=assertActor(actor);try{return fn()}finally{operationActor=previous}};
  function emit(listeners,value){for(const listener of listeners)try{listener(clone(value))}catch(error){console.error('Extension subscription failed',error)}}
- const originalRecord=record;record=(type,data={})=>{originalRecord(type,{...data,actor:operationActor});emit(stateListeners,canonical());if(type==='selection')emit(selectionListeners,selected);};
+ let notifiedSelection=JSON.stringify(selected);
+ function notifySelection(){const key=JSON.stringify(selected);if(key===notifiedSelection)return;notifiedSelection=key;emit(selectionListeners,selected)}
+ const originalRecord=record;record=(type,data={})=>{originalRecord(type,{...data,actor:operationActor});emit(stateListeners,canonical());notifySelection();};
  const toolbar=document.createElement('div');toolbar.id='extensionToolbar';document.querySelector('header .grow').before(toolbar);
  const inspector=document.createElement('div');inspector.id='extensionInspector';$('notes').before(inspector);
  const canonicalNode=id=>canonical().objects.find(o=>o.id===id);
@@ -101,7 +103,7 @@
  c.addEventListener('contextmenu',()=>{if(menu.hidden)return;const selection=selected.map(canonicalNode).filter(Boolean);for(const command of registry.commands.values())if(command.placement==='context'&&(!command.when||command.when({selection}))){const button=document.createElement('button');button.textContent=command.label;button.setAttribute('role','menuitem');button.onclick=()=>{closeMenu();runCommand(command)};menu.append(button)}});
  for(const [eventName,method]of [['pointerdown','onPointerDown'],['pointermove','onPointerMove'],['pointerup','onPointerUp']])c.addEventListener(eventName,event=>{if(!activePointerTool)return;event.preventDefault();event.stopImmediatePropagation();if(eventName==='pointerdown')c.setPointerCapture(event.pointerId);try{activePointerTool[method]?.({point:world(event),event,host})}catch(error){toast(error.message)}},{capture:true});
  const baseSetTool=setTool;setTool=t=>{activePointerTool=null;baseSetTool(t)};
- const baseUndo=undo;undo=(redo=false)=>{baseUndo(redo);emit(selectionListeners,selected)};$('undo').onclick=()=>undo();$('redo').onclick=()=>undo(true);
+ const baseUndo=undo;undo=(redo=false)=>{baseUndo(redo);notifySelection()};$('undo').onclick=()=>undo();$('redo').onclick=()=>undo(true);
 
  save=async()=>{if(save.pending)return;save.pending=true;try{const snapshot=canonical();checkDocument(snapshot);const response=await fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expectedRevision:savedRevision,document:snapshot})});if(!response.ok)throw Error(response.status===409?'Workspace changed elsewhere. Export before reloading.':'Save failed');const result=await response.json();savedRevision=result.revision;dirty=doc.revision!==snapshot.revision;doc.revision=Math.max(doc.revision,result.revision);canonicalBase={...snapshot,revision:result.revision};status();toast('Saved feedback locally')}finally{save.pending=false}};
  $('save').onclick=()=>save().catch(error=>toast(error.message));$('export').onclick=()=>download(canonical(),'thought-rig-workspace.json');
