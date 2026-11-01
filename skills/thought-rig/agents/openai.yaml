@@ -1,0 +1,7 @@
+interface:
+  display_name: "Thought Rig"
+  short_description: "Build interactive tools for expressing and refining intent"
+  default_prompt: "Use $thought-rig to build and seed an interactive tool that helps me express, test, and refine what I want, then read my edits back into our work."
+
+policy:
+  allow_implicit_invocation: true
