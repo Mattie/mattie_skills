@@ -28,4 +28,21 @@ assert.equal(result.redone.extensionData.durationSeconds,3);
 const roundTrip=fromCanvasDocument(result.document,canonical);
 assert.equal(roundTrip.objects.find(o=>o.id==='cue').data.durationSeconds,3);
 assert.deepEqual(roundTrip.notes,canonical.notes);
-console.log('PASS: selection remains clean; content reset marks dirty; custom All reset restores domain baseline, field reset preserves duration, undo/redo and canonical roundtrip retain notes.');
+for(const [type,field,before,after] of [['text','text','Original text','Edited text'],['image','src','original.png','edited.png']]){
+ const built={id:'built',type:'core:'+type,parentId:'frame',geometry:{x:10,y:20,w:100,h:50},data:{label:'Original label',[field]:before}};
+ const source={...structuredClone(canonical),objects:[frame,built],baseline:structuredClone([frame,built]),notes:[{id:'built-note',targetId:'built',text:'Retain built-in note'}]};
+ sandbox.fixture=toCanvasDocument(source);sandbox.contentField=field;sandbox.editedValue=after;
+ const actual=JSON.parse(vm.runInContext(`(()=>{
+  doc=fixture;past=[];future=[];selected=[];migrateDocument();
+  object('built')[contentField]=editedValue;object('built').extra='added';object('built').x=80;
+  resetTarget('built','position');const partial=clone(object('built'));
+  resetTarget('built','all');const restored=clone(object('built'));undo();const reverted=clone(object('built'));undo(true);
+  return JSON.stringify({partial,restored,reverted,document:doc});
+ })()`,sandbox));
+ assert.equal(actual.partial[field],after);assert.equal(actual.partial.x,10);
+ assert.equal(actual.restored[field],before);assert.equal('extra' in actual.restored,false);
+ assert.equal(actual.reverted[field],after);assert.equal(actual.reverted.extra,'added');
+ const exported=fromCanvasDocument(actual.document,source);
+ assert.equal(exported.objects.find(o=>o.id==='built').data[field],before);assert.deepEqual(exported.notes,source.notes);
+}
+console.log('PASS: selection stays clean; custom and built-in content reset, geometry-only reset, undo/redo, export, and notes.');

@@ -71,6 +71,32 @@ test('legacy import preserves source file and original geometry',t=>{
   assert.throws(()=>createWorkspace(destination),/already exists/);
 });
 
+test('legacy import retains added and removed identities independently of reset snapshots',t=>{
+  const dir=temporary(t),file=path.join(dir,'legacy.json'),destination=path.join(dir,'imported');
+  const piece=id=>({id,kind:'text',label:id,text:id,x:10,y:10,w:50,h:30});
+  const removed=piece('removed'),added=piece('added');
+  const legacy={schemaVersion:1,revision:1,frames:[{id:'f',kind:'screen',label:'Frame',x:0,y:0,w:100,h:100,pieces:[added],baseline:[removed]}],originals:{added},notes:[{id:'n',targetId:'removed',text:'Keep the reason'}],events:[]};
+  fs.writeFileSync(file,JSON.stringify(legacy));
+  importLegacyWorkspace(file,destination);
+  const doc=readJSON(path.join(destination,'state.json'));
+  for(const saved of [doc,fromCanvasDocument(toCanvasDocument(doc),doc)]){
+    const report=readback(saved);
+    assert.equal(report.changes.find(c=>c.targetId==='removed').status,'removed');
+    assert.equal(report.changes.find(c=>c.targetId==='added').status,'added');
+    assert.deepEqual(report.notes,legacy.notes);
+  }
+  assert.equal(fs.readFileSync(file,'utf8'),JSON.stringify(legacy));
+  legacy.frames[0].baseline=[];
+  legacy.originals.f={...legacy.frames[0],pieces:[added]};
+  legacy.originals.deletedFrame={id:'deletedFrame',kind:'screen',x:0,y:0,w:100,h:100,pieces:[{...removed,id:'deletedChild'}]};
+  fs.writeFileSync(file,JSON.stringify(legacy));
+  const second=path.join(dir,'empty-baseline');importLegacyWorkspace(file,second);
+  const changes=readback(readJSON(path.join(second,'state.json'))).changes;
+  assert.equal(changes.find(c=>c.targetId==='added').status,'added');
+  assert.equal(changes.find(c=>c.targetId==='deletedFrame').status,'removed');
+  assert.equal(changes.find(c=>c.targetId==='deletedChild').status,'removed');
+});
+
 test('missing extension preserves data and produces readback warning',async t=>{
   const root=createWorkspace(path.join(temporary(t),'workspace'));
   const manifest=readJSON(path.join(root,'manifest.json'));manifest.extensions=[{id:'missing',module:'extensions/missing.mjs'}];fs.writeFileSync(path.join(root,'manifest.json'),JSON.stringify(manifest));

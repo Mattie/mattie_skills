@@ -56,9 +56,9 @@ function resetTarget(id,part='all'){
   if(o.kind==='group'){for(const member of base.members||[]){const f=object(member.id);if(f&&o.frameIds.includes(f.id)){f.x=member.x;f.y=member.y;}}return}
   const fields=part==='position'?['x','y']:part==='size'?['w','h']:part==='rotation'?['rotation']:['x','y','w','h','rotation'];
   for(const key of fields)o[key]=base[key]??(key==='rotation'?0:o[key]);
-  // Extension domain values are independent of geometry, but belong to an All reset.
-  // Replace the data object so fields added since the baseline are removed as well.
-  if(part==='all'&&o.registeredType){o.extensionData=clone(base.extensionData||{});o.label=o.extensionData.label??base.label??o.registeredType;}
+  // All restores piece content too, including built-in text/images and added fields.
+  // Notes live separately and retain their stable target IDs.
+  if(part==='all'&&!doc.frames.includes(o)){for(const key of Object.keys(o))delete o[key];Object.assign(o,clone(base));}
   if(doc.frames.includes(o)&&part==='all'&&o.kind!=='web'){o.pieces=clone(base.pieces);o.variant='Original';o.variants={};o.baseline=clone(base.pieces);selected=[o.id]}
   else if(!doc.frames.includes(o)){frameFor(id).variant='Custom';}
  },{targetId:id,baselineCapturedAt:base.capturedAt});

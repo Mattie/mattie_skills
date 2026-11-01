@@ -84,9 +84,22 @@ export function fromCanvasDocument(canvas, canonicalBase={}) {
 export function importLegacy(legacy) {
   if(legacy?.schemaVersion!==1||!Array.isArray(legacy.frames))throw Error('Expected a legacy schemaVersion 1 canvas.');
   const input=clone(legacy);input.notes ||= [];input.events ||= [];input.revision ||= 0;input.originals ||= {};
-  for(const f of input.frames){input.originals[f.id] ||= {...clone(f),pieces:clone(f.baseline||f.pieces||[])};for(const p of f.baseline||f.pieces||[])input.originals[p.id] ||= clone(p);}
+  // Baseline membership comes from the old proposal, never from surviving edits.
+  const baseline=[];
+  const addFrame=f=>{
+    const original=input.originals[f.id]||f;
+    const pieces=f.baseline??original.pieces??f.pieces??[];
+    const node=nodeFromLegacy({...f,...original,id:f.id});node.type=f.kind==='web'?'core:web':'core:frame';baseline.push(node);
+    for(const p of pieces)baseline.push(nodeFromLegacy(p,f.id));
+    input.originals[f.id] ||= {...clone(f),pieces:clone(pieces)};
+    for(const p of pieces)input.originals[p.id] ||= clone(p);
+  };
+  input.frames.forEach(addFrame);
+  for(const [id,o] of Object.entries(input.originals))if(Array.isArray(o.pieces)&&!input.frames.some(f=>f.id===id))addFrame({...o,id});
+  for(const g of input.groups||[])baseline.push({...nodeFromLegacy({...g,...input.originals[g.id],id:g.id}),type:'core:group'});
+  input.baseline=baseline;
   input.events=input.events.map(e=>({...e,actor:e.actor||'unknown'}));
-  return fromCanvasDocument(input);
+  return fromCanvasDocument(input,{schemaVersion:2});
 }
 
 /** Compare final state to baseline; untouched seeds and view-only navigation are not decisions. */
