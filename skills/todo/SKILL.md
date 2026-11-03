@@ -17,7 +17,7 @@ ordinary Todo work needs no chief or worker setup.
 For coordinated work, read [the project records reference](references/project-management.md).
 Also read it and the relevant brief when `.todo/projects/PROJECT.md` already exists
 or an assignment supplies a control directory. Respect current assignments,
-lifecycle, and record ownership before changing lists. The records can be used
+lifecycle, and other chats' edits before changing lists. The records can be used
 without Projectbot; installation alone doesn't assign a chief.
 
 Use the root lists unless a subproject is named. For a subproject, the list paths
@@ -90,9 +90,11 @@ Use this format for all managed files.
   assigned, blocked, paused, or cancelled items and items with unmet dependencies.
   Preserve their IDs and metadata. A request to pop does not silently resume a
   sleeping or cancelled project; explain its state if there is no eligible work.
-- Record who is doing a managed item before starting it. Coordinate with its
-  assigned writer, or maintain it yourself if none is assigned. Check for existing
-  work so popping an item doesn't launch a duplicate.
+- When the human asks this chat to do an item, check for existing work, record
+  this chat's assignment, and proceed. An assigned chief does not require a
+  handoff, permission request, or message to that chief. Reread before updating
+  shared records; resolve actual conflicting assignments rather than assuming
+  a conflict merely because another chat can edit them.
 - If no open items exist, report that the list is already clear.
 - Treat popping an item as accepting the work now, not just removing it from the list.
 - Read and follow the current project's instructions before implementing, including AGENTS.md and any referenced project docs.

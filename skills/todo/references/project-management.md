@@ -107,14 +107,19 @@ older results as useful evidence without letting them overwrite current ownershi
 
 ## Ownership and resuming work
 
-Use one writer for each scope's shared records. Usually that's its chief; without
-a chief, the current agent can do it. Workers return results to that writer. Reread
-human edits before updating records, and move entries rather than duplicating them.
+Any chat may do Todo work the human requests and update the corresponding shared
+records, including when a chief is assigned. The chief coordinates the project;
+it does not have exclusive editing rights. Record this chat's assignment directly
+and proceed without routing the request through the chief. A worker delegated a
+specific assignment can still return its results through the agreed channel.
 
-A replacement chief reads the saved brief and assignments, checks ongoing work,
+Reread before editing and preserve other changes. Check whether the item is already
+being worked on; an actual conflicting assignment needs coordination. A chief
+binding or the possibility of concurrent edits is not itself a reason to stop.
+
+Doing a Todo item does not replace the chief. A replacement chief reads the saved brief and assignments, checks ongoing work,
 and establishes the handoff before taking ownership. An inaccessible chat is unknown,
-not evidence that its work stopped. This convention prevents ordinary editing
-collisions; genuinely concurrent writers need a storage mechanism that serializes them.
+not evidence that its work stopped.
 
 ## Project lifecycle
 

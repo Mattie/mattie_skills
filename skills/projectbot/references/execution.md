@@ -23,7 +23,8 @@ to message the chief separately for their result to count.
 Keep the project's concurrency limit across all its workers, including work already
 underway. For child chiefs, agree who coordinates shared capacity. Avoid concurrent
 edits to the same files by sequencing work or using suitable isolated workspaces.
-Keep one writer for each set of shared Todo records.
+Any chat the human asks to do Todo work can update its assignment directly;
+reread shared records before editing and preserve other changes.
 
 Record assignments before launch and save the returned worker identity afterward.
 If a launch has an uncertain outcome, inspect it before trying again. See Todo's

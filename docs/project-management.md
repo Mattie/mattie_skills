@@ -23,7 +23,8 @@ across projects and help the human decide where attention is needed.
 
 Todo keeps local lists under `.todo/`. Optional project briefs hold the goal, chief
 binding, delegation limits, and next step. Assignment metadata connects work to its
-worker and result. Keep one editable home for each task and one writer per scope.
+worker and result. Keep one editable home for each task; any chat doing requested
+work can update it, taking care to preserve other edits.
 
 Projectbot includes a read-only Python inspector that finds the project for a
 directory and returns its hierarchy, chief, and recorded assignments. It can join
