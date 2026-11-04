@@ -26,6 +26,8 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | [`soft-skill-creator`](skills/soft-skill-creator/) | Create, update, or soften skills whose guidance lives in judgment, voice, style, observation, or feel. | `soft skill`, `voice and style`, `qualitative judgment` |
 | [`thought-rig`](skills/thought-rig/) | Build adaptable working surfaces to express intent through layouts, timing, relationships, and notes, with local tools and plugins. | `intent canvas`, `visual feedback`, `interactive workbench` |
 | [`todo`](skills/todo/) | Manage project-local TODO lists for bugs, ideas, features, tasks, and more. | `push todo`, `pop todo`, `search todo`, `analyze todo`, `summarize todo` |
+| [`verifier-system`](skills/verifier-system/) | Choose and maintain practical ways to verify a project's behavior. | `verification practice`, `answer key`, `setup verifier-system` |
+| [`what-huh`](skills/what-huh/) | Make final responses clear to readers who cannot see the agent's working text. | `self-contained response`, `explain what happened` |
 | [`write-humanly`](skills/write-humanly/) | Draft, rewrite, or review prose for human voice, authorial character, and natural texture. | `human-sounding writing`, `less AI-ish`, `voice matching` |
 | [`write-plainly`](skills/write-plainly/) | Write, rewrite, or review plain-language prose while preserving technical meaning, constraints, and uncertainty. | `plain language`, `plain English`, `audience clarity` |
 | [`write-simplified-technical-english`](skills/write-simplified-technical-english/) | Write, rewrite, or review technical content with ASD-STE100 Simplified Technical English. | `ste`, `write-ste` |
