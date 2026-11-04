@@ -1,0 +1,3 @@
+interface:
+  display_name: "Verifier System"
+  short_description: "Define task success with independent answer keys"

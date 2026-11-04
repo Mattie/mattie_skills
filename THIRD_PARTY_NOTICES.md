@@ -34,3 +34,13 @@ instructions informed by the following sources:
   License](https://github.com/Ryuketsukami/ste-plain-writing/blob/1052bef674ce17bef9b71a815152c6747585c168/LICENSE).
 
 No third-party source files are included in this repository.
+
+## Ray Amjad's verifier skills
+
+The [`verifier-system`](skills/verifier-system/) skill is inspired by
+[Ray Amjad's skills](https://github.com/ray-amjad/skills) at commit
+`36dea1e9fd58c527a80244bd147f062516e2c253`.
+
+The upstream copyright notice and full MIT license are included in
+[`skills/verifier-system/NOTICE.txt`](skills/verifier-system/NOTICE.txt),
+so the notice accompanies the skill when distributed separately.
