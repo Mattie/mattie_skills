@@ -10,7 +10,6 @@ import { constants } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
-import { pathToFileURL } from 'node:url';
 
 const HELP = `
 Usage:
@@ -47,60 +46,19 @@ function required(args, name) {
 }
 
 /** Return a lowercase SHA-256 checksum for a file. */
-async function fileSha256(filePath, fsApi = fs) {
-  const data = await fsApi.readFile(filePath);
+async function fileSha256(filePath) {
+  const data = await fs.readFile(filePath);
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
-/** Copy a validated file exclusively and remove it if the copied bytes changed. */
-export async function copyExclusive(fsApi, source, destination, expectedSha256) {
-  await fsApi.copyFile(source, destination, constants.COPYFILE_EXCL);
-  try {
-    const copied = {
-      path: destination,
-      bytes: (await fsApi.stat(destination)).size,
-      sha256: await fileSha256(destination, fsApi),
-    };
-    if (expectedSha256 !== undefined && copied.sha256 !== expectedSha256) {
-      throw new Error(`Validated source changed while copying: ${source}`);
-    }
-    return copied;
-  } catch (error) {
-    await fsApi.unlink(destination).catch(() => {});
-    throw error;
-  }
-}
-
-/** Refuse an existing destination before any canonical copy begins. */
-async function requireAbsent(destination) {
-  try {
-    await fs.access(destination);
-    throw new Error(`Destination already exists: ${destination}`);
-  } catch (error) {
-    if (error?.code !== 'ENOENT') throw error;
-  }
-}
-
-/** Verify that a candidate file still matches the compiler's validation record. */
-async function verifySource(source, expectedSha256) {
-  await fs.access(source, constants.R_OK);
-  if (typeof expectedSha256 !== 'string' || !/^[0-9a-f]{64}$/.test(expectedSha256)) {
-    throw new Error(`Validation record has no usable SHA-256 for ${source}.`);
-  }
-  const actualSha256 = await fileSha256(source);
-  if (actualSha256 !== expectedSha256) {
-    throw new Error(`Validated source changed: ${source}`);
-  }
-}
-
-/** Write selection metadata exclusively and remove a partial file after write failure. */
-export async function writeSelectionExclusive(fsApi, selectionPath, contents) {
-  try {
-    await fsApi.writeFile(selectionPath, contents, { encoding: 'utf8', flag: 'wx' });
-  } catch (error) {
-    if (error?.code !== 'EEXIST') await fsApi.unlink(selectionPath).catch(() => {});
-    throw error;
-  }
+/** Copy a file without overwriting an existing result. */
+async function copyExclusive(source, destination) {
+  await fs.copyFile(source, destination, constants.COPYFILE_EXCL);
+  return {
+    path: destination,
+    bytes: (await fs.stat(destination)).size,
+    sha256: await fileSha256(destination),
+  };
 }
 
 /** Finalize the selected candidate and write auditable selection metadata. */
@@ -134,43 +92,27 @@ async function main() {
   const previewSizes = validation.previewSizes ?? Object.keys(candidateValidation.previews ?? {});
   const transfers = [{
     kind: 'svg', source: svgSource, destination: svgDestination,
-    expectedSha256: candidateValidation.svg?.sha256,
   }];
   for (const size of previewSizes) {
     transfers.push({
       kind: 'preview', size: String(size),
       source: path.join(runRoot, 'previews', String(size), `${candidate}.png`),
       destination: path.join(runRoot, `${slug}-${size}.png`),
-      expectedSha256: candidateValidation.previews?.[String(size)]?.sha256,
     });
   }
 
-  await requireAbsent(selectionPath);
-  for (const transfer of transfers) {
-    await verifySource(transfer.source, transfer.expectedSha256);
-    await requireAbsent(transfer.destination);
-  }
-
   const canonical = { svg: null, previews: {} };
-  const created = [];
   try {
     for (const transfer of transfers) {
-      const copied = await copyExclusive(
-        fs,
-        transfer.source,
-        transfer.destination,
-        transfer.expectedSha256,
-      );
-      created.push(transfer.destination);
+      const copied = await copyExclusive(transfer.source, transfer.destination);
       if (transfer.kind === 'svg') canonical.svg = copied;
       else canonical.previews[transfer.size] = copied;
     }
 
     const selection = { candidate, slug, canonical, candidateValidation };
-    await writeSelectionExclusive(fs, selectionPath, `${JSON.stringify(selection, null, 2)}\n`);
+    await fs.writeFile(selectionPath, `${JSON.stringify(selection, null, 2)}\n`, { flag: 'wx' });
   } catch (error) {
-    await Promise.allSettled(created.reverse().map((destination) => fs.unlink(destination)));
-    throw error;
+    throw new Error(`Finalization failed: ${error.message}. Partial files may remain; retry in a fresh run directory.`);
   }
 
   process.stdout.write(
@@ -178,9 +120,7 @@ async function main() {
   );
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((error) => {
-    process.stderr.write(`aiconographer: ${error instanceof Error ? error.message : String(error)}\n`);
-    process.exitCode = 1;
-  });
-}
+main().catch((error) => {
+  process.stderr.write(`aiconographer: ${error instanceof Error ? error.message : String(error)}\n`);
+  process.exitCode = 1;
+});

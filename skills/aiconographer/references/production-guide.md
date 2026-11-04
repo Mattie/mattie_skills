@@ -3,18 +3,23 @@
 Read this reference for a full article-icon run, prompt construction, visual validation, or blind
 candidate judging.
 
+This guide describes the coding-agent edition. Use the agent's subscription-backed native tools
+for planning, image generation, inspection, and judging. The API edition expresses the same
+workflow through Chatsnack, its Python module, and its pipx command.
+
 ## Output contract
 
 Produce:
 
-1. Six one-sentence concept descriptions.
+1. Six one-sentence concept descriptions when generating a sheet.
 2. One high-resolution 3-by-2 raster candidate sheet.
 3. Six normalized high-resolution source tiles.
 4. Six transparent two-fill SVG candidates.
 5. Transparent 192px and 48px PNG renders from each SVG.
 6. White and dark-neutral contact sheets.
 7. An anonymous review pack, scorecard, and selected winner.
-8. A run record containing the article text, brief, concepts, prompt, tools, validation, and result.
+8. Every generated attempt and its inspection or compiler rejection reasons.
+9. A run record containing the article text, brief, concepts, prompt, tools, validation, and result.
 
 ## Visual system
 
@@ -79,8 +84,9 @@ remain at least 12px wide.
 
 ## Generate the source sheet
 
-Use built-in image generation unless the user chose another candidate provider. A normal run may
-include one optional style-reference sheet. A blind guide test uses no prior icon image.
+Use the coding agent's native image generation unless the user chose another candidate provider.
+Do not require `OPENAI_API_KEY` for this edition. A normal run may include one optional
+style-reference sheet. A blind guide test uses no prior icon image.
 
 Request a 1536-by-1024 landscape sheet when available, giving six 512px cells. If another size is
 returned, verify it divides into three equal columns and two equal rows with square cells.
@@ -106,37 +112,62 @@ background objects; no pixel art; pure flat white background
 Identify an input icon sheet as a style reference and request its visual grammar without copying its
 subjects. Keep the article screenshot out of the image inputs.
 
-Inspect the generated result. Regenerate when the layout is malformed, any candidate is clipped,
-the background is not plain white, or forbidden effects appear. A rejected draft should remain out
-of the compiler.
+Save each result as `candidate-sheet-attempt-N.png`. Before visual inspection, run
+`scripts/check-sheet-padding.mjs` against the sheet. It uses the same four-percent tile safety band
+and isolated-speck tolerance as the API edition. Regenerate when the layout is malformed, any
+candidate enters the safety band, the background is not plain white, or forbidden effects appear.
+
+Retain each rejected sheet and its concrete issues. Put those issues into the next generation
+request. Stop after three attempts. When visual inspection accepts a sheet but compilation rejects
+it, preserve the compiler message and treat it as retry feedback when an attempt remains.
+
+## Use a provided sheet
+
+When the user supplies a 3-by-2 candidate sheet, skip concept planning and image generation.
+Capture the supplied sheet, run the deterministic padding check, compile, blind-judge using the
+source text, finalize, and record provenance. A provided sheet gets no exemption from geometry,
+palette, SVG, transparency, or preview validation.
+
+If the sheet is rejected, stop and request a corrected replacement. Do not modify the user's sheet
+unless they explicitly ask for refinement. Record `candidate_provider` as `provided sheet` and
+`generation_prompt` and `concept_plan` as `null`.
 
 ## Compile at high resolution
 
-Use `scripts/process-sheet.mjs` from the skill. It performs these deterministic operations:
+Run `scripts/check-sheet-padding.mjs` first, then use `scripts/process-sheet.mjs`. The compiler
+performs these deterministic operations:
 
 1. Verifies the sheet geometry and crops six source cells without resizing.
-2. Maps every source pixel to the nearest of white, charcoal, and coral.
-3. Runs VTracer with the fixed palette in spline/cutout mode.
-4. Removes white paths, adds an SVG `viewBox`, and validates vector-only output.
-5. Renders transparent previews directly from SVG using Resvg.
-6. Checks dimensions, alpha coverage, and exact opaque RGB values.
-7. Creates white/dark contact sheets and a randomized anonymous review pack.
+2. Maps source pixels to the approved palette, allowing coral only when red dominates green and blue
+   by at least 12 levels. This prevents neutral antialiased pixels from becoming coral.
+3. If the artwork's bounding box is more than 5% of the tile off-center on either axis, shifts
+   the whole normalized artwork toward the center on that axis. Small offsets remain; the source
+   sheet and the artwork's shape, size, and internal arrangement are unchanged.
+4. Runs VTracer with the fixed palette in spline/cutout mode.
+5. Removes white paths, adds an SVG `viewBox`, and validates vector-only output.
+6. Renders transparent previews directly from SVG using Resvg.
+7. Checks dimensions, alpha coverage, and exact opaque RGB values.
+8. Creates white/dark contact sheets and a randomized anonymous review pack.
 
 Trace from the high-resolution cells. Keep 48px and 192px images as render targets only.
-The normal generation contract is a 3-by-2 sheet. The compiler's explicit `--columns` and
-`--rows` overrides are recovery/import controls for another six-cell arrangement; they do not
-change the generation prompt or the six-candidate requirement.
+The bounding-box adjustment is geometric, not a guarantee of optical balance; check the selected
+icon at 48px and refine its composition if it still looks noticeably off-center.
 
 ## Blind judging
 
-Use `gpt-5.6-terra` as the preferred judge. Give it:
+Use a fresh judge context when available, with `gpt-5.6-terra` as the preferred judge. If that
+model is unavailable, use the strongest available reasoning model and record its exact name. If a
+fresh context is unavailable, run a separate judging phase using only the blinded inputs below and
+record `judge_independence` as `same-agent`; otherwise record it as `fresh-agent`. Give the judge:
 
 - Exact article text.
 - Randomly named 192px previews.
 - The matching randomly named 48px previews.
 
 Hide the alias map, generation prompt, concept descriptions, sheet positions, and creator
-preference until scoring is complete.
+preference until scoring is complete. If the same agent previously saw the sheet or concepts,
+say the judging was not independent or fully blind; anonymizing the previews cannot erase that
+prior context.
 
 Score every candidate from 1 to 5:
 
@@ -152,21 +183,54 @@ Request one winner, one runner-up, a concise article-specific reason, and one sm
 needed. Disqualify text, embedded raster data, an opaque SVG background, extra fills, pixel-art
 styling, or loss of the central feature at 48px.
 
+Save a UTF-8 JSON file named `aiconographer-scorecard.json` with:
+
+- `candidates`: exactly six objects using aliases `ash`, `birch`, `cedar`, `dune`, `ember`, and
+  `flint` exactly once.
+- Each candidate object: `alias`, `article_specificity`, `legibility_48px`,
+  `professional_craft`, `silhouette_and_composition`, `two_fill_style_compliance`,
+  `weighted_total`, and non-empty `notes`.
+- Top-level `winner`, `runner_up`, `reason`, and `refinement`.
+
+Winner and runner-up must be different aliases. Recalculate every weighted total from the fixed
+weights before mapping the winner through `review-map.json`; retain any corrected reported value
+as provenance. If aliases, score fields, notes, winner, runner-up, reason, or refinement are
+missing or invalid, retain the raw judge output and stop before finalization. Do not infer missing
+values or silently rerun judging.
+
 ## Select and refine
 
 Run `scripts/finalize-winner.mjs` after the blind result is mapped back to a candidate ID. This
 copies the chosen SVG and its PNG derivatives to stable slug-based names without overwriting files.
+
+Derive the default slug from the article title by lowercasing ASCII text, replacing runs of
+non-alphanumeric characters with hyphens, trimming leading and trailing hyphens, and falling back
+to `source-icon`. Before the run begins, require a new or empty run directory. Files created there
+during the current run are expected. Before finalization, if that slug's canonical SVG or preview
+paths already exist, choose a different slug or start a new run directory; never overwrite prior
+evidence. A failed finalization may leave partial files; retry in a fresh run directory.
 
 For refinement, change one high-resolution feature at a time, then repeat normalization,
 vectorization, rendering, and judging. Leave small PNG derivatives untouched.
 
 ## Run record
 
-Record:
+Write `run-record.json` with these fields, using `null` where a mode does not produce a value:
+
+- `source_text`, `concept_plan`, and `generation_attempts`.
+- `candidate_provider`: `coding-agent native image generation` or `provided sheet`.
+- `provided_sheet`, `generation_prompt`, `captured_sheet_filename`, `edition`, and `skill_version`.
+- `sheet_inspection`, `source_sheet`, and `compiler_tools`.
+- `judge_model`, `judge_independence`, `scorecard_file`, and parsed `scorecard`.
+- `selection`, including anonymous winner, mapped candidate, slug, canonical files, and validation.
+
+Also ensure the record preserves:
 
 - Article title, subtitle, and exact input text.
-- Concept brief and six descriptions.
+- Concept brief and six descriptions when a sheet was generated.
 - Exact generation prompt and candidate provider.
+- Edition (`coding-agent`) and skill version.
+- Every generated attempt with padding, inspection, and compiler results.
 - Source-sheet dimensions and checksum.
 - Compiler dependency versions and settings.
 - Validation summary.
