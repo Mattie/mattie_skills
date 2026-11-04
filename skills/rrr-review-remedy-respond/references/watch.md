@@ -92,6 +92,11 @@ Enterprise uses all observed checks because older schemas may lack requiredness
 information. Green CI alone does not mean reviewer work is finished or authorize
 merging.
 
+If duplicate check attempts cannot be ordered because a timestamp is missing,
+the helper favors a failure or pending attempt over success. That can delay a
+green event if an older incomplete attempt remains visible; check the live PR
+when the ambiguity matters.
+
 Apply the user's stopping condition. Without a more specific condition, finish
 the initial pass, perform one bounded wait, handle any resulting work, then stop
 watching and hand back the result. Do not turn one RRR request into indefinite

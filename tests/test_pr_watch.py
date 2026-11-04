@@ -163,6 +163,24 @@ def test_unknown_conclusion_and_separate_apps():
     assert {c["id"]: c["status"] for c in checks} == {"new": "success", "other": "pending"}
 
 
+@pytest.mark.parametrize("reverse", [False, True])
+def test_queued_rerun_without_start_time_does_not_hide_behind_old_success(reverse):
+    success = {"__typename": "CheckRun", "id": "old", "name": "tests",
+               "status": "COMPLETED", "conclusion": "SUCCESS", "startedAt": "2026-10-13T12:00:00Z",
+               "isRequired": True}
+    queued = {"__typename": "CheckRun", "id": "new", "name": "tests",
+              "status": "QUEUED", "conclusion": None, "startedAt": None, "isRequired": True}
+    nodes = [success, queued]
+    if reverse:
+        nodes.reverse()
+    checks = WATCH.normalize_checks(nodes)
+    assert [(item["id"], item["status"]) for item in checks] == [("new", "pending")]
+    old = snapshot(checks=WATCH.normalize_checks([success]))
+    pending = snapshot(checks=checks)
+    assert kinds(WATCH.evaluate(old, pending)[0]) == ["checks-pending"]
+    assert "checks-passed" not in kinds(WATCH.evaluate(None, pending)[0])
+
+
 def seed(store, value):
     with store.locked():
         state = store.load()

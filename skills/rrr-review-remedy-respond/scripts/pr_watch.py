@@ -104,8 +104,8 @@ def check_status(node: dict[str, Any]) -> str:
 
 
 def normalize_checks(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Use the newest attempt for each named check from the same app and workflow."""
-    checks: dict[str, dict[str, Any]] = {}
+    """Use the newest attempt, or a conservative result when order is unknown."""
+    checks: dict[str, list[dict[str, Any]]] = {}
     for node in nodes:
         suite = node.get("checkSuite") or {}
         workflow = ((suite.get("workflowRun") or {}).get("workflow") or {}).get("name", "")
@@ -121,10 +121,19 @@ def normalize_checks(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "at": node.get("startedAt") or node.get("createdAt") or "",
             "completed_at": node.get("completedAt"),
         }
-        # GitHub connection order breaks ties when runs have identical start times.
-        if key not in checks or check["at"] >= checks[key]["at"]:
-            checks[key] = check
-    return list(checks.values())
+        checks.setdefault(key, []).append(check)
+    result = []
+    for attempts in checks.values():
+        if all(check["at"] for check in attempts):
+            # Connection order breaks ties when attempts have identical times.
+            result.append(max(enumerate(attempts), key=lambda pair: (pair[1]["at"], pair[0]))[1])
+        else:
+            # Queued runs can lack startedAt, so the newest attempt is unknown.
+            # Prefer a failure or pending result over a potentially stale success.
+            def risk(check: dict[str, Any]) -> int:
+                return 2 if check["status"] in FAILURES else 0 if check["status"] in PASSED else 1
+            result.append(max(enumerate(attempts), key=lambda pair: (risk(pair[1]), pair[0]))[1])
+    return result
 
 
 def digest(value: Any) -> str:
