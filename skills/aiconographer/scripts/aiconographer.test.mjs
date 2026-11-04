@@ -9,11 +9,61 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 import { normalizeTile, positiveInteger, previewSizes, validatePreview } from './process-sheet.mjs';
-import { copyExclusive, writeSelectionExclusive } from './finalize-winner.mjs';
 
 const finalizer = fileURLToPath(new URL('./finalize-winner.mjs', import.meta.url));
 const processor = fileURLToPath(new URL('./process-sheet.mjs', import.meta.url));
+const paddingChecker = fileURLToPath(new URL('./check-sheet-padding.mjs', import.meta.url));
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
+
+function checkPadding(source) {
+  return spawnSync(process.execPath, [
+    paddingChecker, '--input', source, '--deps-root', path.dirname(processor),
+  ], { encoding: 'utf8' });
+}
+
+test('padding checker detects occupied edges with the same speck tolerance', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-padding-'));
+  try {
+    const pixels = Buffer.alloc(120 * 80 * 3, 255);
+    for (let x = 0; x < 26; x += 1) pixels.fill(0, x * 3, x * 3 + 3);
+    for (let x = 40; x < 65; x += 1) pixels.fill(0, x * 3, x * 3 + 3);
+    const source = path.join(root, 'sheet.png');
+    await sharp(pixels, { raw: { width: 120, height: 80, channels: 3 } }).png().toFile(source);
+    const result = checkPadding(source);
+    assert.equal(result.status, 1);
+    const inspection = JSON.parse(result.stdout);
+    assert.equal(inspection.accepted, false);
+    assert.deepEqual(inspection.findings.map(({ cell, foreground }) => [cell, foreground]), [[1, 26]]);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test('padding checker composites transparency, handles grayscale, and rejects malformed grids', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-padding-formats-'));
+  try {
+    const transparent = path.join(root, 'transparent.png');
+    await sharp(Buffer.alloc(120 * 80 * 4), {
+      raw: { width: 120, height: 80, channels: 4 },
+    }).png().toFile(transparent);
+    assert.equal(JSON.parse(checkPadding(transparent).stdout).accepted, true);
+
+    const grayscale = path.join(root, 'grayscale.png');
+    await sharp(Buffer.alloc(120 * 80, 255), {
+      raw: { width: 120, height: 80, channels: 1 },
+    }).png().toFile(grayscale);
+    assert.equal(JSON.parse(checkPadding(grayscale).stdout).accepted, true);
+
+    const malformed = path.join(root, 'malformed.png');
+    await sharp({ create: { width: 120, height: 81, channels: 3, background: '#fff' } })
+      .png().toFile(malformed);
+    const result = checkPadding(malformed);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /3-by-2 grid of equal square cells/);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
 
 test('integer and preview-size parsing rejects partial tokens and keeps judging sizes', () => {
   for (const value of ['1.5', '48px', '0', '-1']) {
@@ -74,70 +124,46 @@ test('tile normalization does not invent coral from neutral antialias pixels', a
   }
 });
 
-test('selection write failure removes a partially created selection file', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-selection-'));
-  const selectionPath = path.join(root, 'selection.json');
-  const failingFs = {
-    writeFile: async (destination, contents, options) => {
-      await fs.writeFile(destination, contents.slice(0, 8), options);
-      const error = new Error('simulated disk full');
-      error.code = 'ENOSPC';
-      throw error;
-    },
-    unlink: fs.unlink.bind(fs),
-  };
+test('normalization centers noticeably displaced art without moving small offsets', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-center-'));
   try {
-    await assert.rejects(
-      writeSelectionExclusive(failingFs, selectionPath, '{"candidate":"c1"}\n'),
-      /simulated disk full/,
-    );
-    await assert.rejects(fs.access(selectionPath));
-  } finally {
-    await fs.rm(root, { recursive: true, force: true });
-  }
-});
+    for (const [left, top, expectedLeft, expectedTop, shiftX, shiftY] of [
+      [70, 40, 40, 40, -30, 0], [44, 40, 44, 40, 0, 0], [40, 10, 40, 40, 0, 30],
+    ]) {
+      const pixels = Buffer.alloc(100 * 100 * 3, 255);
+      for (let y = top; y < top + 20; y += 1) {
+        for (let x = left; x < left + 20; x += 1) {
+          const i = (y * 100 + x) * 3;
+          const rgb = x < left + 10 ? [44, 44, 43] : [244, 81, 56];
+          [pixels[i], pixels[i + 1], pixels[i + 2]] = rgb;
+        }
+      }
+      const source = path.join(root, `tile-${left}-${top}.png`);
+      await sharp(pixels, { raw: { width: 100, height: 100, channels: 3 } }).png().toFile(source);
+      const tile = await normalizeTile(sharp, source, { left: 0, top: 0, width: 100, height: 100 });
+      const rendered = await sharp(tile.png).raw().toBuffer();
+      assert.deepEqual(tile.centerShift, { x: shiftX, y: shiftY });
+      assert.equal(tile.counts['#2C2C2B'], 200);
+      assert.equal(tile.counts['#F45138'], 200);
+      assert.equal(rendered[(expectedTop * 100 + expectedLeft) * 3], 44);
+      assert.equal(rendered[(expectedTop * 100 + expectedLeft + 10) * 3], 244);
+      assert.equal(rendered[(expectedTop * 100 + expectedLeft - 1) * 3], 255);
+    }
+    const white = path.join(root, 'white.png');
+    await sharp({ create: { width: 100, height: 100, channels: 3, background: '#fff' } }).png().toFile(white);
+    const blank = await normalizeTile(sharp, white, { left: 0, top: 0, width: 100, height: 100 });
+    assert.deepEqual(blank.centerShift, { x: 0, y: 0 });
 
-test('post-copy metadata failure removes the untracked destination', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-copy-'));
-  const source = path.join(root, 'source.svg');
-  const destination = path.join(root, 'destination.svg');
-  const failingFs = {
-    copyFile: fs.copyFile.bind(fs),
-    stat: async () => { throw new Error('simulated stat failure'); },
-    readFile: fs.readFile.bind(fs),
-    unlink: fs.unlink.bind(fs),
-  };
-  try {
-    await fs.writeFile(source, '<svg/>');
-    await assert.rejects(copyExclusive(failingFs, source, destination), /simulated stat failure/);
-    await assert.rejects(fs.access(destination));
-  } finally {
-    await fs.rm(root, { recursive: true, force: true });
-  }
-});
-
-test('copy hash mismatch removes the changed canonical artifact', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-copy-hash-'));
-  const source = path.join(root, 'source.svg');
-  const destination = path.join(root, 'destination.svg');
-  const original = Buffer.from('<svg/>');
-  const changed = Buffer.from('<svg><path/></svg>');
-  const changingFs = {
-    copyFile: async (from, to, flags) => {
-      await fs.writeFile(from, changed);
-      await fs.copyFile(from, to, flags);
-    },
-    stat: fs.stat.bind(fs),
-    readFile: fs.readFile.bind(fs),
-    unlink: fs.unlink.bind(fs),
-  };
-  try {
-    await fs.writeFile(source, original);
-    await assert.rejects(
-      copyExclusive(changingFs, source, destination, sha256(original)),
-      /changed while copying/,
-    );
-    await assert.rejects(fs.access(destination));
+    // A 5.5-pixel offset is outside the 5-pixel tolerance even though the
+    // integer shift rounds to five pixels.
+    const pixels = Buffer.alloc(100 * 100 * 3, 255);
+    for (let y = 40; y < 60; y += 1) {
+      for (let x = 46; x < 65; x += 1) pixels.fill(0, (y * 100 + x) * 3, (y * 100 + x + 1) * 3);
+    }
+    const edge = path.join(root, 'edge.png');
+    await sharp(pixels, { raw: { width: 100, height: 100, channels: 3 } }).png().toFile(edge);
+    const adjusted = await normalizeTile(sharp, edge, { left: 0, top: 0, width: 100, height: 100 });
+    assert.deepEqual(adjusted.centerShift, { x: -5, y: 0 });
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }
@@ -194,28 +220,28 @@ function finalize(root) {
   });
 }
 
-test('finalization verifies hashes before creating canonical files', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-hash-'));
+test('finalization copies the selected files without requiring matching recorded hashes', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-finalize-'));
   try {
     await createRun(root, { alteredSvg: true });
     const result = finalize(root);
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /Validated source changed/);
-    await assert.rejects(fs.access(path.join(root, 'article.svg')));
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(await fs.readFile(path.join(root, 'article.svg'), 'utf8'), 'changed');
+    assert.equal(JSON.parse(await fs.readFile(path.join(root, 'selection.json'), 'utf8')).candidate, 'c1');
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }
 });
 
-test('finalization preflights every destination before the first copy', async () => {
+test('finalization preserves existing output and reports how to retry', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiconographer-preflight-'));
   try {
     await createRun(root, { lateConflict: true });
     const result = finalize(root);
     assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /Destination already exists/);
-    await assert.rejects(fs.access(path.join(root, 'article.svg')));
-    await assert.rejects(fs.access(path.join(root, 'article-192.png')));
+    assert.match(result.stderr, /retry in a fresh run directory/);
+    assert.equal(await fs.readFile(path.join(root, 'article-48.png'), 'utf8'), 'existing');
+    await assert.rejects(fs.access(path.join(root, 'selection.json')));
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }

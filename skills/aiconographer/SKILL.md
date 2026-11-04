@@ -1,60 +1,83 @@
 ---
 name: aiconographer
-description: Generate and select consistent two-color lore article icons, then compile candidate sheets into validated transparent SVGs and small-size previews. Use for Lorebubble-style article icon creation or refinement; avoid for general illustrations or maintenance of an existing third-party SVG set.
+description: Generate, compile, blind-judge, and finalize consistent two-color lore article icons with a coding agent's native image tools. Use for subscription-backed agent runs; use the Aiconographer Python package for API, module, or pipx automation.
+metadata:
+  version: "0.1.0"
+  edition: "coding-agent"
 ---
 
-# Aiconographer
+# Aiconographer — coding-agent edition
 
-Create six distinct article-icon candidates, assess them at their real UI sizes, and retain a
+Create six distinct article-icon candidates, assess them at their real UI sizes, and retain one
 transparent two-fill SVG as the canonical asset.
 
-Keep the candidate provider replaceable. The current workflow uses built-in image generation;
-another provider such as a Chatsnack app may later produce the same 3-by-2 sheet contract. The
-deterministic compiler in `scripts/` begins at that sheet and remains unchanged.
+This skill is the coding-agent edition of Aiconographer. Use the host agent's native image
+generation and reasoning capabilities under the user's coding subscription. It must not require
+an API key or invoke the Python package merely to perform an ordinary skill run.
+
+The separate Python package is the API edition: it exposes a module and pipx CLI and uses
+Chatsnack for model calls. Provider plumbing intentionally differs. Keep the editions aligned on
+their shared workflow and document any behavioral differences rather than assuming identical output.
 
 ## Choose the path
 
 - **Full article run:** Read [references/production-guide.md](references/production-guide.md)
-  completely, then generate, compile, judge, and select an icon.
-- **Compile an existing candidate sheet:** Run `scripts/process-sheet.mjs --help`. The input must
-  be a clean 3-by-2 sheet with six square cells. Read the normalization and validation sections of
-  the production guide when interpreting failures.
-- **Judge existing compiled candidates:** Read the judging section of the production guide and use
-  the anonymous review pack produced by the compiler.
+  completely, then plan, generate, inspect, compile, blind-judge, and finalize.
+- **Compile an existing candidate sheet:** Read the compile and provided-sheet sections of the
+  production guide. Run `scripts/check-sheet-padding.mjs --help` and
+  `scripts/process-sheet.mjs --help` before compiling.
+- **Judge existing compiled candidates:** Read the blind-judging section of the production guide.
+  Use only the article text and the compiler's anonymous 192px/48px review pack.
 - **Finalize an already selected candidate:** Run `scripts/finalize-winner.mjs --help`.
 
-## Non-negotiable asset contract
+## Shared behavior contract
 
-- Six materially different candidates.
-- Charcoal `#2C2C2B` and coral `#F45138` are the only final SVG fills.
-- The final SVG background is transparent.
-- White `#FFFFFF` is a temporary generation and tracing background.
-- Generate and trace at high resolution; judge direct SVG renders at 192px and 48px.
-- The selected SVG is canonical. PNGs are derivatives.
-- Do not pass article-page screenshots to the image model. Extract and use the article text.
-- Do not create pixel art, text, labels, gradients, shadows, texture, or miniature scenes.
+- When generating a sheet, plan exactly six materially different concepts.
+- Generate one landscape 3-by-2 candidate sheet on pure white.
+- Allow at most three generated-sheet attempts. Preserve every attempt and feed concrete rejection
+  reasons into the next one.
+- Use charcoal `#2C2C2B` and coral `#F45138` as the only final SVG fills.
+- Keep final SVG backgrounds transparent; white is a temporary raster background.
+- Validate tile padding deterministically before model inspection or compilation.
+- Keep each icon roughly centered. The compiler shifts noticeably displaced artwork as a whole;
+  small offsets and the design's internal composition remain unchanged.
+- Trace at source resolution and judge direct SVG renders at 192px and 48px.
+- Give the judge anonymous previews without candidate IDs, concepts, positions, prompts, or creator
+  preference. A same-agent judging phase is not independent or fully blind if it saw the sheet.
+- Produce a parsed scorecard, exclusive winner finalization, and a retained run record.
+- Support a user-provided 3-by-2 sheet by skipping planning and generation while preserving
+  deterministic validation, blind judging, and provenance.
+- Derive the final slug from the article title: lowercase ASCII, replace non-alphanumeric runs
+  with hyphens, trim hyphens, and fall back to `source-icon`. Never overwrite an existing result.
 
-## Full-run workflow
+## Generated-sheet run
 
-1. Extract the article's primary identity, defining relationship, essential structure, emotional
-   register, and useful motifs.
-2. Draft six one-sentence concepts with genuinely different metaphors or compositions.
-3. Generate one 3-by-2 candidate sheet on pure white using the production-guide prompt contract.
-   A style reference is optional and must be identified as style-only.
-4. Inspect the sheet. Regenerate when the grid is malformed, a candidate is clipped, or forbidden
-   rendering appears.
-5. Compile the retained sheet with `process-sheet.mjs`.
-6. Give a `gpt-5.6-terra` judge only the article text and anonymous 192px/48px previews. Keep the
-   alias mapping, prompts, concepts, positions, and creator preference hidden.
-7. Score article specificity, 48px legibility, professional craft, silhouette/composition, and
-   style compliance with the production-guide weights.
-8. Finalize the winner with `finalize-winner.mjs`. Record the concept brief, exact prompt,
-   scorecard, winner, and any refinement recommendation beside the run.
+1. Extract the source text's primary identity, defining relationship, essential structure,
+   emotional register, and useful motifs.
+2. Write six genuinely different one-sentence icon concepts.
+3. Generate a 1536×1024 candidate sheet with the host's native image tool. Request six square
+   cells, generous padding, the exact palette, and no dividers or forbidden rendering effects.
+4. Save the sheet as `candidate-sheet-attempt-N.png`. Run the deterministic padding check, then
+   inspect the whole sheet visually. If rejected, retain the reasons and retry, up to three total
+   attempts.
+5. Compile the first accepted sheet with `process-sheet.mjs`. Treat compiler rejection like an
+   inspection rejection when attempts remain.
+6. Use a fresh judge context when available. Give it only the exact source text and paired
+   anonymous 192px/48px previews.
+7. Save the structured result as `aiconographer-scorecard.json`, verify its aliases and weighted
+   arithmetic, and map the winner through `review-map.json`. Stop before finalization when the
+   scorecard is structurally invalid.
+8. Finalize exactly one candidate with `finalize-winner.mjs`.
+9. Retain the source, concept brief, all attempts, inspections, accepted sheet, prompt, compiler
+   outputs, scorecard, selection, provider label, tool versions, and checksums in
+   `run-record.json`.
+
+For a provided sheet, follow the guide's provided-sheet path instead of planning or generating.
 
 ## Deterministic compiler setup
 
-The scripts load pinned Node dependencies from a caller-supplied directory so `node_modules` never
-needs to live inside the skill. Stage dependencies in a temporary directory:
+The bundled scripts use pinned Node dependencies from a caller-supplied directory so
+`node_modules` stays outside the skill. Stage them in a temporary directory:
 
 ```powershell
 $skillRoot = '<absolute-path-to-this-skill>'
@@ -67,22 +90,23 @@ Copy-Item -LiteralPath "$skillRoot\scripts\package-lock.json" -Destination $deps
 & $npm ci --prefix $depsRoot
 ```
 
-Use equivalent `node` and `npm` commands on non-Windows systems. Never add these packages to the
-host project's dependencies merely to process an icon sheet.
+Check the four-percent safety band before compilation:
 
-Compile a sheet:
+```powershell
+& $node "$skillRoot\scripts\check-sheet-padding.mjs" `
+  --input '<candidate-sheet.png>' `
+  --deps-root $depsRoot
+```
+
+Compile into a new or empty directory:
 
 ```powershell
 & $node "$skillRoot\scripts\process-sheet.mjs" `
   --input '<candidate-sheet.png>' `
   --output '<new-empty-run-directory>' `
   --deps-root $depsRoot `
-  --article '<article-text-file>'
+  --article '<source-text-file>'
 ```
-
-The compiler refuses a non-empty output directory. It writes normalized source tiles, SVGs,
-192px and 48px transparent previews, white and dark contact sheets, an anonymous judge pack,
-`review-map.json`, and `validation.json`.
 
 After judging, finalize without overwriting prior output:
 
@@ -93,8 +117,12 @@ After judging, finalize without overwriting prior output:
   --slug '<article-slug>'
 ```
 
+Use equivalent `node` and `npm` commands on non-Windows systems. Do not add these dependencies
+to the host project merely to process a sheet.
+
 ## Completion
 
-Inspect the generated contact sheets and winning 48px render before reporting success. Provide the
-canonical SVG path, preview path, run record or scorecard, final generation prompt, and whether the
-candidate provider was built-in image generation or another source.
+Inspect the white and dark contact sheets and the winning 48px render before reporting success.
+Provide the canonical SVG, preview, scorecard, run record, exact generation prompt, and candidate
+provider. For a provided sheet, report the generation prompt as `null`. State that this was the
+coding-agent edition so the provenance is unambiguous.

@@ -173,6 +173,7 @@ export async function normalizeTile(sharp, sourcePath, region) {
 
   const output = Buffer.alloc(data.length);
   const counts = Object.fromEntries(TRACE_PALETTE.map(({ hex }) => [hex, 0]));
+  let minX = info.width, minY = info.height, maxX = -1, maxY = -1;
 
   for (let offset = 0; offset < data.length; offset += 3) {
     const red = data[offset];
@@ -199,15 +200,39 @@ export async function normalizeTile(sharp, sourcePath, region) {
     output[offset + 1] = selected.rgb[1];
     output[offset + 2] = selected.rgb[2];
     counts[selected.hex] += 1;
+    if (selected.hex !== WHITE.hex) {
+      const pixel = offset / 3;
+      const x = pixel % info.width, y = Math.floor(pixel / info.width);
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    }
   }
 
-  const png = await sharp(output, {
+  // Recenter only noticeable offsets, preserving each design's shape and scale.
+  let shiftX = 0, shiftY = 0, centered = output;
+  if (maxX >= 0) {
+    const dx = (info.width - minX - maxX - 1) / 2;
+    const dy = (info.height - minY - maxY - 1) / 2;
+    if (Math.abs(dx) > info.width * 0.05) shiftX = Math.floor(dx + 0.5);
+    if (Math.abs(dy) > info.height * 0.05) shiftY = Math.floor(dy + 0.5);
+    if (shiftX || shiftY) {
+      centered = Buffer.alloc(output.length, 255);
+      for (let y = minY; y <= maxY; y += 1) {
+        const start = (y * info.width + minX) * 3;
+        const end = (y * info.width + maxX + 1) * 3;
+        const destination = ((y + shiftY) * info.width + minX + shiftX) * 3;
+        output.copy(centered, destination, start, end);
+      }
+    }
+  }
+
+  const png = await sharp(centered, {
     raw: { width: info.width, height: info.height, channels: 3 },
   })
     .png()
     .toBuffer();
 
-  return { png, counts, width: info.width, height: info.height };
+  return { png, counts, width: info.width, height: info.height, centerShift: { x: shiftX, y: shiftY } };
 }
 
 /** Remove white tracing paths and make the SVG explicitly scalable. */
@@ -451,6 +476,7 @@ async function main() {
 
     candidates[candidateId] = {
       sourceCell: region,
+      centerShift: normalized.centerShift,
       normalizedCounts: normalized.counts,
       tileSha256: sha256(normalized.png),
       svg: {
