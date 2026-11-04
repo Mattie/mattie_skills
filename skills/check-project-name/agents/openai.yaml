@@ -1,0 +1,7 @@
+interface:
+  display_name: "Check Project Name"
+  short_description: "Assess developer project name collisions"
+  default_prompt: "Use $check-project-name to compare my project names for collisions, discoverability, and likely confusion."
+
+policy:
+  allow_implicit_invocation: true
