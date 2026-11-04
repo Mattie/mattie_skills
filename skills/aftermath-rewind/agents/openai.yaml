@@ -1,0 +1,4 @@
+interface:
+  display_name: "Aftermath Rewind"
+  short_description: "Work backward from an outcome stated as fact"
+  default_prompt: "Use $aftermath-rewind to work backward from an assigned outcome toward possible causes or discovery paths."
