@@ -13,6 +13,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 
 | Skill | Description | Alternate labels |
 | --- | --- | --- |
+| [`aftermath-rewind`](skills/aftermath-rewind/) | Work backward from an assigned outcome to explore causes or discovery paths. | `backcast`, `retrospective`, `work backward` |
 | [`aiconographer`](skills/aiconographer/) | Generate, compile, and select consistent two-color lore article icons. | `article icon`, `lore icon`, `icon candidates` |
 | [`ask-socrates`](skills/ask-socrates/) | Turn an article, situation, decision, or problem into one frame and three questions chosen from Socratic and Platonic thought tools. | `Socratic lens`, `think like Socrates`, `three questions` |
 | [`check-project-name`](skills/check-project-name/) | Evaluate developer project names for collisions, discoverability, and likely confusion. | `is this name taken?`, `check project name`, `name collision` |
