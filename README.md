@@ -19,7 +19,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | [`check-project-name`](skills/check-project-name/) | Evaluate developer project names for collisions, discoverability, and likely confusion. | `is this name taken?`, `check project name`, `name collision` |
 | [`goal-check`](skills/goal-check/) | Summarize the thread's longer-term goal, recent work, and the human input needed next. | `goal check`, `context reset`, `quick orientation` |
 | [`lean-proof-review`](skills/lean-proof-review/) | Review Lean proofs for faithful statements, trustworthy checking, and correspondence with manuscript claims. | `Lean proof audit`, `statement fidelity`, `formal proof review` |
-| [`prior-art`](skills/prior-art/) | Find existing/reusable options, starting with the current repository and local skills, before re-inventing. | `does this exist?`, `YAGNI review`, `avoid reinventing the wheel` |
+| [`prior-art`](skills/prior-art/) | Find reusable software, proofs, and mathematical theory before starting custom work. | `does this exist?`, `prior art`, `avoid reinventing the wheel` |
 | [`projectbot`](skills/projectbot/) | Coordinate project progress, work queues, and focused worker threads using Todo. | `project chief`, `drive this project`, `project progress` |
 | [`quiet-ux`](skills/quiet-ux/) | Design calm visual artifacts with a concise light view and optional richer guidance. | `less talkative UI`, `quiet interface`, `reduce UI clutter` |
 | [`rrr-review-remedy-respond`](skills/rrr-review-remedy-respond/) | Review active GitHub PR comments, fix verified issues, push remedies, and reply to or resolve each thread. | `RRR`, `review remedy respond` |
