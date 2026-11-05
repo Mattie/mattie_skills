@@ -125,7 +125,8 @@ class PriorArtSkillContractTests(unittest.TestCase):
     def test_spike_and_metadata(self) -> None:
         self.assertIn("temporary directory", self.spike)
         self.assertIn("existing development environment", " ".join(self.spike.split()))
-        self.assertIn("stronger isolation", self.spike)
+        self.assertIn("isolated Docker container", self.spike)
+        self.assertIn("user's approval", self.spike)
         metadata = re.search(r'(?m)^  short_description: "([^"]+)"$', self.openai)
         self.assertIsNotNone(metadata)
         self.assertGreaterEqual(len(metadata.group(1)), 25)
