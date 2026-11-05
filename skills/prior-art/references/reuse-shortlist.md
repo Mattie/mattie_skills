@@ -1,8 +1,9 @@
 # Reuse Shortlist Response Format
 
-Use this format for default and deep Prior Art results. The research may remain
-technical and rigorous; the response should help someone quickly decide what
-existing work is useful, how much effort it saves, and what it brings with it.
+For default and deep Prior Art results, prefer the five-column table below to
+compare the strongest candidates. It should make clear what we can reuse, what
+it saves, and what it costs or requires. Honor a user-requested format and omit
+an empty table when there are no useful candidates.
 
 ## Response shape
 
@@ -57,11 +58,39 @@ leverage for the actual problem.
 
 | Column | Required content |
 |---|---|
-| **Existing solution** | A short, hyperlinked candidate name followed by its license and adoption status. For each third-party code/asset adoption candidate, link immutable license evidence and the evaluated revision or content-addressed artifact. For service consumption, show access eligibility and dated primary-source terms evidence instead; distinguish unresolved access from unverified fulfillment. Include revision details for standard-library or repository-local candidates only when they materially affect confidence or reuse. |
+| **Existing solution** | A short, hyperlinked candidate name. Include license terms, version, or material uncertainty when relevant to the decision. For service consumption, show access eligibility and dated primary-source terms evidence; distinguish unresolved access from unverified fulfillment. Include revision details when they materially affect confidence or reuse. |
 | **Good&nbsp;fit?** | One bold fit label: `GREAT`, `GOOD`, `PARTIAL`, `WEAK`, `BAD`, or `UNCERTAIN`. |
 | **Overview** | A factual description of what the candidate contains or does. |
 | **Reusable parts / Savings** | Begin with what we can directly reuse. Follow with a separate `**Saves:**` paragraph explaining the work avoided or capability gained. Keep savings qualitative unless a time or cost estimate has supporting evidence. |
 | **Work needed / Catches** | Begin with the work required to make the candidate useful. Follow with a separate `**Catch:**` paragraph for its main limitation, risk, or constraint. |
+
+## Mathematical candidates
+
+Keep the same columns and fit labels. For a mathematical citation, identify
+the theorem/proposition and source version in Existing solution instead of
+inventing package or adoption metadata. For Lean code, identify the declaration,
+module, and relevant revision/toolchain. Apply the existing license and
+adoption rules when copying proof text or code or adding a dependency.
+
+In Overview, state the result's relationship to our target and distinguish an
+informal proof, formal statement, incomplete proof, or checked formal proof
+at the scope actually established. Put useful lemmas, proof techniques, or
+theory and the work they save in Reusable parts / Savings. In Work needed /
+Catches, explain differences in hypotheses or definitions, porting work,
+compatibility, and remaining verification. Practical fit is separate from
+proof evidence; a theoretical result may be valuable without Lean code.
+
+For an open-PR candidate, link the PR, identify the evaluated head revision,
+and label it pending/unmerged (and draft when applicable). Include relevant
+review and CI evidence and the work needed to use it before merge. In the
+Search note, record relevant ongoing-work coverage or gaps when it matters.
+
+For a novelty request, What I'd do should identify closest known results and
+the next discriminating comparison. The Search note separates mathematical
+novelty from formalization novelty and names dated coverage and meaningful
+gaps. A failed search establishes neither originality nor absence of a proof.
+See [Mathematical research](mathematical-research.md) for the search and
+evidence rules.
 
 ## Callable-service candidates
 
@@ -88,7 +117,7 @@ I found [plain-language summary]. [Name the strongest starting point and why it 
 
 | Existing solution | Good&nbsp;fit? | Overview | Reusable parts / Savings | Work needed / Catches |
 |---|:---:|---|---|---|
-| **[Short candidate name](primary-source-url)**<br>[License](immutable-license-url) · [adoption status] · [evaluated revision] | **GOOD** | [What it contains or does.] | [Parts we can reuse.]<br><br>**Saves:** [Work avoided or capability gained.] | [Work required to make it useful.]<br><br>**Catch:** [Most important limitation, risk, or constraint.] |
+| **[Short candidate name](primary-source-url)**<br>[Relevant license or access terms] | **GOOD** | [What it contains or does.] | [Parts we can reuse.]<br><br>**Saves:** [Work avoided or capability gained.] | [Work required to make it useful.]<br><br>**Catch:** [Main limitation and any material uncertainty.] |
 
 **What I'd do:** [Recommended candidate or combination, sequence, and remaining custom work.]
 
@@ -101,12 +130,14 @@ I found [plain-language summary]. [Name the strongest starting point and why it 
 combination to start with, the order of use, directly reusable parts,
 adaptation or integration, remaining custom work, any constraint that should
 change, and the next research check when evidence remains insufficient.
+Provisional license evidence can support a promising lead. Flag a material
+license question before adoption; do not recommend copying or adopting a
+candidate when its terms do not permit the intended use.
 
 The **Search note** states the important sources and evidence lanes checked,
 practical confidence in the shortlist, and unresolved gaps. Mention the mode
 when bounded scope affects interpretation. Summarize deep coverage here; show
-the full deep ledger only when the user asks for it or omitted evidence would
-materially affect reliance.
+detailed notes when the user asks or they materially affect reliance.
 
 ## Rendering rules
 
@@ -118,8 +149,10 @@ materially affect reliance.
 - Show fit labels in bold. Do not repeat the full fit definitions in the
   response.
 - Keep each table cell to two short paragraphs when practical.
-- Use labels only for `Saves` and `Catch`. Let reusable parts and required work
-  read as direct statements.
+- In the savings and catches cells, put **Saves:** and **Catch:** on their own
+  new lines after the reusable parts and required work. Use `<br><br>` within
+  Markdown table cells as in the template, so the breaks render correctly.
+  Let reusable parts and required work read as direct statements.
 
 ## Worked example
 
@@ -129,12 +162,13 @@ expand it. The SRD dataset is the strongest starting point.
 | Existing solution | Good&nbsp;fit? | Overview | Reusable parts / Savings | Work needed / Catches |
 |---|:---:|---|---|---|
 | **[D&D 5.2.1 SRD QA](https://huggingface.co/datasets/datapizza-ai-lab/dnd5e-srd-qa/tree/656d81fa82987d9286fd077f025e4b575db148f2)**<br>CC BY 4.0 · adoption eligible · revision linked | **GOOD** | 56 Q&A pairs with difficulty labels, source passages, and document offsets. | Cases, expected outputs, and provenance.<br><br>**Saves:** Writing the baseline corpus and tracing every answer back to the rules. | Convert it into snackerbench case YAML and add edition metadata.<br><br>**Catch:** Small and heavily focused on revised 5e rules. |
-| **[OpenTriviaQA D&D](https://github.com/uberspot/OpenTriviaQA/blob/dcc1cdf36c2985ed5c849d1f2265c5041ffcdfb9/categories/video-games)**<br>CC BY-SA 4.0 · STUDY-ONLY · revision linked | **WEAK** | Roughly 20 identifiable D&D multiple-choice questions with answers and distractors. | Coverage ideas, distractor patterns, and answer structure.<br><br>**Saves:** Some exploratory work when designing equivalent licensed cases. | Write equivalent licensed cases and verify every fact.<br><br>**Catch:** Share-alike terms and weak source provenance prevent direct reuse under the active policy. |
+| **[OpenTriviaQA D&D](https://github.com/uberspot/OpenTriviaQA/blob/dcc1cdf36c2985ed5c849d1f2265c5041ffcdfb9/categories/video-games)**<br>CC BY-SA 4.0 · unresolved for copying · revision linked | **WEAK** | Roughly 20 identifiable D&D multiple-choice questions with answers and distractors. | Coverage ideas, distractor patterns, and answer structure.<br><br>**Saves:** Some exploratory work when designing equivalent licensed cases. | Verify provenance and assess share-alike terms against this project's distribution before copying.<br><br>**Catch:** Direct reuse is not established by this research. |
 | **[Dragon #117](https://pied.nu/dragon/files/Drmg117.pdf)**<br>Copyrighted · STUDY-ONLY | **WEAK** | 100 professionally edited 1e questions with an answer key and rulebook citations. | Coverage ideas, difficulty patterns, and question styles.<br><br>**Saves:** Some exploratory work when designing a historical-rules suite. | Write equivalent licensed cases or obtain permission.<br><br>**Catch:** Copyright limits direct reuse. |
 
-**What I'd do:** Import the 56 SRD cases first. Use OpenTriviaQA and the
-magazine quizzes only to identify missing topics, distractor patterns, and
-difficulty levels for newly written cases.
+**What I'd do:** Import the 56 SRD cases first after confirming the pinned
+artifact and attribution. Use OpenTriviaQA and the magazine quizzes to
+identify missing topics, distractor patterns, and difficulty levels for
+newly written cases; assess OpenTriviaQA separately before any direct reuse.
 
 **Search note:** I checked public datasets, GitHub, trivia APIs, historical
 publications, and large web quiz collections. I did not find another
