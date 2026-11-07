@@ -21,7 +21,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | [`lean-proof-review`](skills/lean-proof-review/) | Review Lean proofs for faithful statements, trustworthy checking, and correspondence with manuscript claims. | `Lean proof audit`, `statement fidelity`, `formal proof review` |
 | [`prior-art`](skills/prior-art/) | Find existing/reusable options, starting with the current repository and local skills, before re-inventing. | `does this exist?`, `YAGNI review`, `avoid reinventing the wheel` |
 | [`projectbot`](skills/projectbot/) | Coordinate project progress, work queues, and focused worker threads using Todo. | `project chief`, `drive this project`, `project progress` |
-| [`quiet-ux`](skills/quiet-ux/) | Design calm visual artifacts with a concise light view and optional richer guidance. | `less talkative UI`, `quiet interface`, `reduce UI clutter` |
+| [`quiet-ux`](skills/quiet-ux/) | Let beauty, layout, and expressive controls guide users; rework ornamental microcopy into better design. | `less talkative UI`, `quiet interface`, `reduce UI clutter` |
 | [`rrr-review-remedy-respond`](skills/rrr-review-remedy-respond/) | Review active GitHub PR comments, fix verified issues, push remedies, and reply to or resolve each thread. | `RRR`, `review remedy respond` |
 | [`soft-skill-creator`](skills/soft-skill-creator/) | Create, update, or soften skills whose guidance lives in judgment, voice, style, observation, or feel. | `soft skill`, `voice and style`, `qualitative judgment` |
 | [`thought-rig`](skills/thought-rig/) | Build adaptable working surfaces to express intent through layouts, timing, relationships, and notes, with local tools and plugins. | `intent canvas`, `visual feedback`, `interactive workbench` |
