@@ -22,7 +22,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | [`parallax-image`](skills/parallax-image/) | Turn still images into cached depth parallax with repaired backgrounds and an interactive verifier. | `image depth`, `photo parallax`, `moving artwork` |
 | [`prior-art`](skills/prior-art/) | Find reusable software, proofs, and mathematical theory before starting custom work. | `does this exist?`, `prior art`, `avoid reinventing the wheel` |
 | [`projectbot`](skills/projectbot/) | Coordinate project progress, work queues, and focused worker threads using Todo. | `project chief`, `drive this project`, `project progress` |
-| [`quiet-ux`](skills/quiet-ux/) | Design calm visual artifacts with a concise light view and optional richer guidance. | `less talkative UI`, `quiet interface`, `reduce UI clutter` |
+| [`quiet-ux`](skills/quiet-ux/) | Let beauty, layout, and expressive controls guide users; rework ornamental microcopy into better design. | `less talkative UI`, `quiet interface`, `reduce UI clutter` |
 | [`rrr-review-remedy-respond`](skills/rrr-review-remedy-respond/) | Review active GitHub PR comments, fix verified issues, push remedies, and reply to or resolve each thread. | `RRR`, `review remedy respond` |
 | [`soft-skill-creator`](skills/soft-skill-creator/) | Create, update, or soften skills whose guidance lives in judgment, voice, style, observation, or feel. | `soft skill`, `voice and style`, `qualitative judgment` |
 | [`thought-rig`](skills/thought-rig/) | Build adaptable working surfaces to express intent through layouts, timing, relationships, and notes, with local tools and plugins. | `intent canvas`, `visual feedback`, `interactive workbench` |
