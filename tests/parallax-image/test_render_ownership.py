@@ -15,13 +15,13 @@ class BackgroundFill:
         return np.where(hole[..., None], np.array([26, 31, 39], dtype=np.uint8), source)
 
 
-def make_fixture(root):
+def make_fixture(root, coin_color=(239, 214, 146), name="Synthetic coin"):
     w, h = 256, 192
     y, x = np.mgrid[:h, :w]
     mask = ((x - 130) / 87) ** 2 + ((y - 102) / 63) ** 2 < 1
     image = Image.new("RGB", (w, h), (26, 31, 39))
     draw = ImageDraw.Draw(image)
-    draw.ellipse((43, 39, 217, 165), fill=(239, 214, 146), outline=(255, 245, 215), width=3)
+    draw.ellipse((43, 39, 217, 165), fill=coin_color, outline=(255, 245, 215), width=3)
     draw.rectangle((92, 64, 104, 137), fill=(24, 27, 35))
     draw.rectangle((104, 126, 169, 138), fill=(24, 27, 35))
     draw.rectangle((8, 7, 21, 15), fill=(220, 45, 110))  # asymmetric UV marker
@@ -34,7 +34,7 @@ def make_fixture(root):
     files = {str(path.relative_to(root)).replace("\\", "/"):
              {"sha256": p.file_sha(path), "bytes": path.stat().st_size}
              for path in root.rglob("*") if path.is_file()}
-    manifest = {"schema": 1, "recipe": p.RECIPE, "source": {"name": "Synthetic coin",
+    manifest = {"schema": 1, "recipe": p.RECIPE, "source": {"name": name,
                 "decoded_rgb_sha256": p.sha(source.tobytes())}, "config": config,
                 "static": False, "surfaces": surfaces, "variants": variants,
                 "selected_variant": "margin-3", "files": files}
@@ -44,6 +44,50 @@ def make_fixture(root):
 
 @unittest.skipUnless(os.environ.get("PARALLAX_RENDER_TESTS") == "1", "Set PARALLAX_RENDER_TESTS=1 for the browser regression")
 class RenderOwnershipTests(unittest.TestCase):
+    def test_gallery_recovers_after_an_image_decode_failure(self):
+        from playwright.sync_api import sync_playwright
+
+        with tempfile.TemporaryDirectory(dir="D:/Temp" if Path("D:/Temp").is_dir() else None) as temp:
+            root = Path(temp)
+            packs = []
+            for i, (color, name) in enumerate([
+                    ((239, 214, 146), "Initial coin"),
+                    ((190, 70, 120), "Failed coin"),
+                    ((80, 190, 140), "Recovered coin")]):
+                folder = root / str(i)
+                folder.mkdir()
+                make_fixture(folder, color, name)
+                packs.append(folder)
+            gallery = root / "gallery.html"
+            p.make_view(packs, gallery)
+            with sync_playwright() as playwright:
+                options = {"headless": True}
+                if os.environ.get("PARALLAX_TEST_BROWSER"):
+                    options["executable_path"] = os.environ["PARALLAX_TEST_BROWSER"]
+                browser = playwright.chromium.launch(**options)
+                try:
+                    page = browser.new_page(reduced_motion="no-preference")
+                    errors = []
+                    page.on("pageerror", lambda error: errors.append(str(error)))
+                    page.goto(gallery.as_uri())
+                    page.wait_for_function("window.parallaxVerifier?.ready")
+                    # Simulate a corrupt delivered atlas, then use the actual controls.
+                    page.evaluate("PACKS[1].variants[0].color='data:image/png;base64,AAAA'")
+                    page.select_option("#image", "1")
+                    page.wait_for_function("getComputedStyle(document.getElementById('result')).display==='none'")
+                    self.assertTrue(page.locator("#fallback").is_visible())
+                    self.assertTrue(page.locator("#play").is_disabled())
+                    page.select_option("#image", "2")
+                    page.wait_for_function("parallaxVerifier.ready&&parallaxVerifier.pack.name==='Recovered coin'")
+                    self.assertTrue(page.locator("#result").is_visible())
+                    self.assertFalse(page.locator("#fallback").is_visible())
+                    self.assertTrue(page.locator("#play").is_enabled())
+                    pixel = page.evaluate("Array.from(document.getElementById('result').getContext('2d').getImageData(130,100,1,1).data)")
+                    self.assertEqual(pixel, [80, 190, 140, 255])
+                    self.assertFalse(errors)
+                finally:
+                    browser.close()
+
     def test_opaque_surface_does_not_flash_during_small_motion_steps(self):
         from playwright.sync_api import sync_playwright
 
