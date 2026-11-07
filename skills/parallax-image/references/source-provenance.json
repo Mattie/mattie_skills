@@ -1,0 +1,33 @@
+{
+  "source": "Mattie ManaSplash parallax-depth-20261106",
+  "adapted": "2026-11-06",
+  "files": [
+    {
+      "file": "handoff/parallax-image-guide.md",
+      "sha256": "3f20bad70195ae3be404f6baf5e74b57fb12c0437cff57fc9b3dad9cd7645d60",
+      "bytes": 23475
+    },
+    {
+      "file": "expanded/prepare.py",
+      "sha256": "211a707e053809a4f2c4b95a6d66c36849a6516d4dad0e234d366cfeee44896e",
+      "bytes": 8622
+    },
+    {
+      "file": "expanded/viewer-template.html",
+      "sha256": "72c7ac40bf9e67e5994f5e5e0d4c6f2e152997d435c4d3567b016b4ce763c673",
+      "bytes": 10496
+    },
+    {
+      "file": "expanded/check.py",
+      "sha256": "d7e06e5851d88a0303e6b1de45dfdf57e4dd2fbc822d73d9602abdd2f0ccc0df",
+      "bytes": 5096
+    },
+    {
+      "file": "scripts/run_depth.py",
+      "sha256": "2328f7bebe71ce5757b5898bca546ca754da51c403c90e4860c4f2bb40e28f26",
+      "bytes": 4325
+    }
+  ],
+  "models_included": false,
+  "artwork_included": false
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Parallax Image"
+  short_description: "Create depth parallax with clean moving edges"
+  default_prompt: "Use $parallax-image to turn a local image into a verified parallax pack and interactive preview."
