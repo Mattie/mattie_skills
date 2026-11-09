@@ -30,12 +30,33 @@ Record assignments before launch and save the returned worker identity afterward
 If a launch has an uncertain outcome, inspect it before trying again. See Todo's
 record reference for the small amount of metadata that makes this recoverable.
 
+## Living-feature partners
+
+Use [Todo's partnership guidance](../../todo/references/living-features.md) for
+feature and bugfix assignments. Include the canonical home path, task ID, actual
+worktree/branch, concrete contribution, and integration owner where relevant.
+A representative loads Living Feature and the existing home; it creates neither
+a separate identity nor exclusive ownership. Reuse helpful available conversations
+within existing authorization, or delegate a bounded contribution when useful.
+Count partners within the same project-wide capacity, including work elsewhere.
+
+The chief coordinates competing priorities within the human's mandate. Features
+explain who relies on them and help find a workable path; they do not acquire vetoes.
+Return a substantive unresolved product decision to the human. Status inspection
+alone starts no partners.
+
 ## Review and continue
 
 Check the returned work against the requested result. Give concrete feedback and
 keep useful worker context for revisions. Update Todo when the result is accepted,
 including integration when the task requires it. New ideas can go into the queue
 without silently enlarging the current assignment.
+
+Bring findings worth inheriting back to the affected shared home, preserving
+branch/revision context and concurrent contributions. Coordinate the writer when
+edits overlap. Accepted task completion does not retire the feature; cancellation
+of one assignment does not retire every implementation. Late findings can be saved
+without resuming a sleeping or cancelled project.
 
 Continue as far as the human's request and limits support. If progress depends on
 something unavailable, leave a clear next step instead of repeatedly checking the

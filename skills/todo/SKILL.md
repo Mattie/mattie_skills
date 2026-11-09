@@ -39,6 +39,14 @@ below refer to its own directory.
   List maintenance changes tracking files only. `pop` also authorizes the selected
   implementation work under the project's normal instructions.
 
+## When implementation work begins
+
+For `pop` or another request to implement a feature or fix, ask: who already lives
+in the behavior I am about to change, and would working together help us get this
+right? Use [living-feature discovery](references/living-features.md) to find useful
+memory and choose whether to read, consult, or partner. Todo still works without
+Living Feature. Push, search, summarize, and analyze alone do not launch partners.
+
 ## Canonical list format
 
 Each tracked file should have these sections:
