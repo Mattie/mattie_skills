@@ -25,6 +25,42 @@ Keep one editable home for each task. `.todo/` stays ignored by Git, so workers 
 other worktrees or hosts need the canonical control path or a way to return results
 to its writer. Ignored files aren't a backup or a synchronization mechanism.
 
+## Canonical control root and living homes
+
+For shared work, use the explicitly supplied canonical control directory or the
+project's existing `control_root`. Follow established redirects to the actual
+records instead of copying them into each checkout. If paths disagree, inspect the
+briefs and assignment source before writing; do not silently choose a second home.
+
+Without an established path, in an ordinary Git layout run
+`git rev-parse --path-format=absolute --git-common-dir`. When this identifies the
+primary checkout's `.git` directory, confirm that checkout with
+`git worktree list --porcelain` and use its `.todo`. Bare repositories and layouts
+where this inference does not hold need an explicit persistent control path.
+Outside Git, use the project's root `.todo`. Ordinary local list maintenance keeps
+its existing paths; do not migrate lists just to discover a living home.
+
+Living features share `<control-root>/living/<feature>/SELF.md` across worktrees.
+Use stable lowercase-hyphen feature names and inspect this directory explicitly.
+No project brief or chief is required solely to establish a home. The current
+Projectbot inspector does not discover living homes; its automatic primary-checkout
+lookup requires an existing project brief and an ordinary `.git` layout.
+
+Keep the shared root outside disposable linked worktrees. A worktree-local `.todo`
+is not automatically canonical. Missing or unreachable records mean unknown context,
+not absence of a feature or assignment. Recover access or arrange a handoff before
+founding a competing home. Other clones and machines need actual access or transfer;
+Git does not synchronize ignored records. Carry the resolved absolute home path in
+assignments and handoffs.
+
+Link affected homes from tasks using ordinary artifact links. Resolve these against
+the canonical control root, even for subproject tasks; for example
+`living/saved-searches/SELF.md`. A worker handoff should also supply the absolute
+path so readers do not interpret the link relative to a subproject list. Keep task
+queues here and lasting feature knowledge in the home. An independently delegated
+contribution gets its own task ID and acceptance condition; a brief consultation
+can remain context on the existing item.
+
 ## Project brief
 
 Use Markdown with YAML frontmatter so the inspector can find the project and chief:

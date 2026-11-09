@@ -32,6 +32,11 @@ Keep Todo current enough that another chat can pick up the project. Report meani
 progress and decisions the human needs to make. Avoid turning every coordination
 step into a status update.
 
+When shaping feature or bugfix work, use [Todo's living-feature discovery](../todo/references/living-features.md).
+Bring relevant memory into the assignment and choose active partnership when it
+will improve the outcome. Living Feature is optional; its representatives count
+within the existing worker limit and share the feature's one home.
+
 ## `$projectbot init`
 
 This invocation means:

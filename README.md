@@ -7,7 +7,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | Suite | Skills | Description |
 | --- | --- | --- |
 | [ReadMe Driven Development (RMDD)](docs/rmdd.md) | [`rmds`](skills/rmds/), [`rmdd`](skills/rmdd/), [`rmdv`](skills/rmdv/) | Your agent treats your ReadMe as desired state and implements everything that's different. <br/> Workflow: <br/> *Desired state → implementation → [optional validation / clarification] → repeat* |
-| [Project management](docs/project-management.md) | [`todo`](skills/todo/), [`projectbot`](skills/projectbot/) | Local work tracking with optional project chiefs, focused workers, and a chief-of-staff view. |
+| [TODO suite](docs/project-management.md) | [`todo`](skills/todo/), [`projectbot`](skills/projectbot/), [`living-feature`](skills/living-feature/) | Finite tasks, optional project coordination, and continuing care for features and lasting fixes. |
 
 ## Skills
 
@@ -19,6 +19,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | [`check-project-name`](skills/check-project-name/) | Evaluate developer project names for collisions, discoverability, and likely confusion. | `is this name taken?`, `check project name`, `name collision` |
 | [`goal-check`](skills/goal-check/) | Summarize the thread's longer-term goal, recent work, and the human input needed next. | `goal check`, `context reset`, `quick orientation` |
 | [`lean-proof-review`](skills/lean-proof-review/) | Review Lean proofs for faithful statements, trustworthy checking, and correspondence with manuscript claims. | `Lean proof audit`, `statement fidelity`, `formal proof review` |
+| [`living-feature`](skills/living-feature/) | Become a feature or lasting fix, carry its purpose through delivery, and help it live well with its neighbors. | `become this feature`, `own this fix`, `continuing feature care` |
 | [`parallax-image`](skills/parallax-image/) | Turn still images into cached depth parallax with repaired backgrounds and an interactive verifier. | `image depth`, `photo parallax`, `moving artwork` |
 | [`prior-art`](skills/prior-art/) | Find reusable software, proofs, and mathematical theory before starting custom work. | `does this exist?`, `prior art`, `avoid reinventing the wheel` |
 | [`projectbot`](skills/projectbot/) | Coordinate project progress, work queues, and focused worker threads using Todo. | `project chief`, `drive this project`, `project progress` |
