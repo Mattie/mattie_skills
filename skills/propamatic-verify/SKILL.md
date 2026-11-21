@@ -24,7 +24,7 @@ Use local staged inputs with no network or generation credentials. Do not follow
 - Check units, dimensions, axes, pivots, required assemblies and material assignments.
 - Compare renders from reference-matched cameras. List visible disagreements instead of relying solely on counts or image similarity scores.
 - Sweep control endpoints and interior samples; include dependency boundaries, interacting pairs and representative multi-control states. Report sampled coverage rather than claiming every continuous state was proven safe.
-- Measure clearances and overlaps with a documented tolerance. Check the moving part's swept envelope against surrounding fixed geometry, including hidden end caps and flanges beyond the intended contact surfaces. Separate intentional contact from unintended clashes. Use mesh checks where bounding boxes cannot resolve fit.
+- Measure clearances and overlaps with a documented tolerance. Check the moving part's swept envelope against surrounding fixed geometry, including hidden end caps and flanges. Separate intentional contact from unintended clashes. Assert that each required slice or region includes geometry from the parts it is meant to test. Prefer intersecting triangles or edges with the slice over selecting vertices inside it. A face can cross the region even when every vertex lies outside it.
 - For locomotion, measure foot slip during stance, root displacement per cycle and loop continuity. For secondary motion, check finite values, stability and a fixed time horizon.
 
 ## Verify the exported artifact
@@ -34,6 +34,8 @@ Identify the exact candidate by hash and run ID. Re-import it into a fresh proce
 Establish the declared rest pose before sampling each clip. Muting a track can leave transforms evaluated from a previous clip, especially when the current clip animates different objects. Reset those transforms or explicitly sample disjoint tracks at rest. Test intended clip combinations separately.
 
 Exercise at least the target runtime behavior that can differ from Blender: parameter seeking, clip mixing for coupled controls, root motion, material support, texture loading and loop interpolation. If the target runtime is unavailable, label that behavior unverified. Do not silently replace this check with another Blender render.
+
+For compatible self-contained GLBs targeting Three.js, use the [Node playback check](references/node-gltf.md) to test poses and looping without WebGL. Check rendered materials and shaders in the target renderer.
 
 Inspect export metadata for private paths, prompts, credentials and executable content. A format validator can check structure, but cannot certify an asset harmless or visually correct.
 
