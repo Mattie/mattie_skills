@@ -6,10 +6,10 @@ Record the candidate's path, hash and build/run identifier; the Blender/exporter
 
 Each check needs a status (`pass`, `fail`, `unverified`, or `not_applicable`), expected behavior or tolerance, observed measurement, and evidence when useful. Failure and unverified status are never equivalent to pass. Mark not-applicable only with a reason, such as no animation on a static prop.
 
-For motion, record controls and combinations sampled, frame/time intervals, sample count, worst observed clearance/slip/pose error and excluded intentional contacts. Sampling is evidence about those samples; it is not proof for unsampled continuous states. A formal guarantee would need a different method and stated assumptions.
+For motion, record the sampled controls and combinations, frame or time intervals, sample count, worst observed clearance, slip or pose error, and excluded intentional contacts. For required clearance regions, record how much geometry participated so empty slices are visible. Report sampled coverage separately from any guarantee over continuous motion.
 
 For visual comparison, keep the actual reference and output views, camera/scale correspondence and specific discrepancies. Source-versus-export similarity alone cannot show that either matches the intended design.
 
-For export checks, identify the re-imported hash and compare evaluated source/export states at known parameter values. Record target-engine checks separately. A file that re-imports in Blender may still behave differently in the consuming engine.
+For export checks, identify the re-imported hash and compare evaluated source and export states at known parameter values. Record headless playback separately from target-renderer appearance checks. For a turntable, record the source hash, frame count, decode check, and observed motion range for the clips shown.
 
 A failed build cannot produce a current passing export record. Check that expected outputs belong to this run; stale files and success-shaped console output are not evidence. End with whether the artifact is ready for the intended use and any limitations that affect that judgment.

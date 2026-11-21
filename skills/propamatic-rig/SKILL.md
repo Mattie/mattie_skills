@@ -31,6 +31,8 @@ For secondary motion, use bounded timesteps and a finite simulation interval. Ca
 
 Bake controls to explicit transforms or morph weights. To map a normalized control directly to clip time, export time zero and set a known duration, such as one second. Check the exported timestamps and seek the exact endpoints in a consumer. A Blender timeline starting at frame 1 may add a one-frame offset unless the glTF exporter slides the clip to zero. Keep demo animation separate from parameter actions.
 
+For Blender 4.5 Actions and glTF export, read [Blender glTF baking](references/blender-gltf.md) for slot handling, clip grouping, and sampling full rotations.
+
 Before finish renders or texture baking, export a low-detail candidate with the intended clip settings. Read the first and last key timestamps as well as the reported duration. In a consumer, seek both endpoints and one interior value, then compare the resulting poses with the control spec. A duration check alone can miss leading dead time. Recheck the finished export after any change to its animation or exporter settings.
 
 Do not assume independent glTF clips reproduce coupled controls. Test the target engine's mixing behavior; if controls overwrite the same transforms or violate dependencies, use a documented runtime combiner or bake supported combinations instead. Never promise arbitrary combinations from isolated clips alone.

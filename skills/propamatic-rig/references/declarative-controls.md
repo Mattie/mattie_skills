@@ -28,7 +28,30 @@ A small hinge definition could look like:
 
 Accept only supported schema versions and kinds. Constrain identifiers to a short documented alphabet; resolve them through a known scene-object table. Identifiers are not filesystem paths, Python attribute paths or import names. Require unique controls and existing part references.
 
-Require finite numeric scalars and vectors of the expected lengths, a nonzero normalized axis, ordered limits, and defaults in [0, 1]. Limit document size, nesting, control count, keyframe count, chain length, frames and solver iterations. Reject duplicate JSON keys and nonstandard NaN/Infinity rather than silently accepting ambiguous data. Choose project-appropriate numeric/resource caps before parsing or allocating attacker-controlled structures.
+Require finite numeric scalars and vectors of the expected lengths, a nonzero normalized axis, ordered limits, and defaults in [0, 1]. Bound document size, nesting, control and keyframe counts, chain length, frames, and solver iterations. A small Python loader can enforce the byte limit and reject duplicate keys and nonstandard constants before schema validation.
+
+```python
+import json
+
+def unique_keys(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"Duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+def reject_constant(value):
+    raise ValueError(f"Invalid JSON constant: {value}")
+
+with controls_path.open("rb") as stream:
+    raw = stream.read(limit + 1)
+if len(raw) > limit:
+    raise ValueError("Control document exceeds its byte budget")
+spec = json.loads(raw, object_pairs_hook=unique_keys, parse_constant=reject_constant)
+```
+
+Use an already validated input path and a project-appropriate byte limit. Follow parsing with the schema and resource checks above. Check finiteness after parsing too, since a JSON number such as `1e999` can overflow to infinity.
 
 Add kinds only when a trusted implementation exists. For a slider, store an axis and travel interval. For a morph, store a known shape-key identifier and weight interval. For a curve, use a bounded list of numeric samples with a fixed interpolation enum. Do not invent an expression language when these operations suffice.
 

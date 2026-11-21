@@ -17,6 +17,8 @@ Separate evidence from inference. Record units, axis conventions, overall bounds
 
 Start with enough views to settle proportions. Add close-ups per mechanism: hinge from front and side, hydraulic anchors at both ends, latch contact, gear clearance, or strap routing. A plate should answer a named question. Reuse existing views when they already answer it.
 
+Before setting pivots, follow an asymmetric landmark across the front, side, and top views. Label the subject's own left and right separately from camera left and right to catch mirrored panels. Record the export basis too. With Blender's standard Y-up glTF export, Blender +Z up and −Y forward map to glTF +Y up and +Z forward.
+
 If views disagree, choose a consistent interpretation and record it. Do not average incompatible geometry silently. Use real dimensions or a labelled assumption for scale. For complicated props, distinguish silhouette geometry from small features that can become normal-map detail.
 
 When generation is needed, use the available image-generation skill/tool. Read [reference-generation.md](references/reference-generation.md) before uploading files or implementing a provider client. Existing authorization carries forward; planning alone does not authorize uploading private references, paid batches, or retries without a bound.

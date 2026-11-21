@@ -6,6 +6,8 @@ Choose the boundary from the input, not from the filename extension.
 
 Use a dedicated generated directory and the known project Blender installation. Start with factory settings and automatic script execution disabled. Review any dependencies loaded by the script. Explicit Python execution still runs the entry point and imports: disabling auto-execution does not neutralize them.
 
+Check project setup docs and tool config for pinned Blender, exporter, and runtime paths before falling back to tools on `PATH`. Record the versions actually used. Resolve the trusted output root first, for example `parent = trusted_root.resolve() / "runs"`. Then require `parent.resolve() == parent` to reject symlinks below that root while allowing a symlinked workspace. Validate the run ID with a full match such as `[a-z0-9][a-z0-9_-]{0,63}`, then create `(parent / run_id).mkdir(exist_ok=False)` in that parent. Resolve other asset paths with component-aware containment. Use an isolated filesystem if untrusted processes can modify those paths.
+
 A typical command shape is:
 
 ```sh
