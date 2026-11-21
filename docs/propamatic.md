@@ -1,6 +1,6 @@
 # Prop-a-Matic
 
-Prop-a-Matic is a skill suite for building Blender props, from reference art to an export you can inspect in motion. Each skill also works on its own. With a model you already have, start at the stage you need. Static props can skip rigging.
+Use [`$propamatic`](../skills/propamatic/) to build a Blender prop from an idea or reference through verification and an MP4 turntable. With a model you already have, tell it what needs work. Static props skip rigging. You can also invoke each stage on its own.
 
 | Skill | Use it to |
 | --- | --- |
@@ -11,13 +11,15 @@ Prop-a-Matic is a skill suite for building Blender props, from reference art to 
 
 ## Example
 
-Ask `$propamatic-plan` to lay out a steampunk jackhammer with a visible 60 mm chisel stroke. Build the housing and guide with `$propamatic-build`, then use `$propamatic-rig` to give the chisel a one-second control clip and a separate hammering loop. Have `$propamatic-verify` measure the exported stroke, check the full travel path through the guide and housing, and render an orbit while the chisel cycles.
+> Use `$propamatic` to make a steampunk jackhammer with a visible 60 mm chisel stroke. Deliver the editable Blender file, the verified GLB, and an MP4 orbit with the chisel cycling.
+
+The base skill loads the plan, build, rig, and verify skills as it reaches each stage. It carries the parts plan and acceptance criteria through the build and checks the exact model used for the demo.
 
 Check the swept clearance and try a low-detail export before committing to finish work. The jackhammer pilot used those checks to catch a hidden flange intersecting the shaft and a one-frame offset that kept a normalized seek from reaching full extension.
 
 ## Execution and installation
 
-Install the four skill directories in your agent's skill root, or install only the stage you need. Each directory carries its own references. Blender, the exporter, and any rendering tools come from the project environment.
+Install `propamatic` and the four stage skill directories together in your agent's skill root for the full workflow. For focused work, install just the stage skill you need. Blender, the exporter, and rendering tools come from the project environment.
 
 The suite treats control metadata as data and keeps local builds separate from credentialed reference generation. Use a disposable worker to process outside models or scripts, and use the project’s verified export as the subject for the finished demonstration.
 

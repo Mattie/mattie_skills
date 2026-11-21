@@ -31,6 +31,8 @@ Use local staged inputs with no network or generation credentials. Do not follow
 
 Identify the exact candidate by hash and run ID. Re-import it into a fresh process or scene and compare evaluated poses, transforms, morphs, animation durations and visual appearance with the source at corresponding times. Check conversion of axes and units explicitly. Compare Blender poses relative to each strip's start and check GLB timestamps separately. Blender may place the imported strip at a different scene frame even when the GLB correctly starts at zero.
 
+Establish the declared rest pose before sampling each clip. Muting a track can leave transforms evaluated from a previous clip, especially when the current clip animates different objects. Reset those transforms or explicitly sample disjoint tracks at rest. Test intended clip combinations separately.
+
 Exercise at least the target runtime behavior that can differ from Blender: parameter seeking, clip mixing for coupled controls, root motion, material support, texture loading and loop interpolation. If the target runtime is unavailable, label that behavior unverified. Do not silently replace this check with another Blender render.
 
 Inspect export metadata for private paths, prompts, credentials and executable content. A format validator can check structure, but cannot certify an asset harmless or visually correct.
