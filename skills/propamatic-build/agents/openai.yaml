@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prop-a-Matic Build"
+  short_description: "Build reproducible geometry with bounded execution"
+  default_prompt: "Use $propamatic-build to build this asset from its parts plan."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prop-a-Matic Rig"
+  short_description: "Create bounded controls and portable baked motion"
+  default_prompt: "Use $propamatic-rig to articulate this model with validated controls."

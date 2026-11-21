@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prop-a-Matic Verify"
+  short_description: "Check references, articulation, and exported behavior"
+  default_prompt: "Use $propamatic-verify to check this export against its design and runtime requirements."

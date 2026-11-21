@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prop-a-Matic Plan"
+  short_description: "Turn references into measured parts and mechanisms"
+  default_prompt: "Use $propamatic-plan to turn this concept into a buildable machine parts plan."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prop-a-Matic"
+  short_description: "Build and demonstrate a complete Blender prop"
+  default_prompt: "Use $propamatic to turn this brief into an editable Blender prop, a verified export, and an MP4 turntable."

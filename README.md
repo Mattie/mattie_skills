@@ -8,6 +8,7 @@ A collection of skills and agentic persona/role packages designed/reimagined by 
 | --- | --- | --- |
 | [ReadMe Driven Development (RMDD)](docs/rmdd.md) | [`rmds`](skills/rmds/), [`rmdd`](skills/rmdd/), [`rmdv`](skills/rmdv/) | Your agent treats your ReadMe as desired state and implements everything that's different. <br/> Workflow: <br/> *Desired state → implementation → [optional validation / clarification] → repeat* |
 | [TODO suite](docs/project-management.md) | [`todo`](skills/todo/), [`projectbot`](skills/projectbot/), [`living-feature`](skills/living-feature/) | Finite tasks, optional project coordination, and continuing care for features and lasting fixes. |
+| [Prop-a-Matic](docs/propamatic.md) | [`propamatic`](skills/propamatic/), [`propamatic-plan`](skills/propamatic-plan/), [`propamatic-build`](skills/propamatic-build/), [`propamatic-rig`](skills/propamatic-rig/), [`propamatic-verify`](skills/propamatic-verify/) | Build a Blender prop from brief to verified export and MP4 turntable in one request. Use a stage skill for focused work. |
 
 ## Skills
 

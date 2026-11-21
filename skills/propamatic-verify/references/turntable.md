@@ -1,0 +1,11 @@
+# MP4 turntable demonstration
+
+Use the verified export as the model when available. Re-import it into a fresh scene, or reuse an existing lighting stage and replace the source meshes with the export. Use the same input trust boundary as other Blender imports. If presentation relies on authoring-scene features, say which scene was rendered. Keep staging props, cameras and lights out of the model export.
+
+Start in a readable three-quarter view and complete one steady 360° orbit over roughly 6–10 seconds. Aim the camera at the center of the evaluated bounds. Maintain a constant distance or orthographic scale. Vary the elevation smoothly and keep roll level. A swing of about 8–12° either side of a slightly raised view works for many props. Change the angle, backdrop or floor if it hides details the user needs to see.
+
+Keep lighting fixed in the scene. Use broad fill for sides that turn away from the key light and keep the backdrop quiet. Frame the asset with breathing room across its orbit and range of motion. On an articulated asset, play the representative exported animation while the camera orbits so the viewer can see motion from several angles. For a looping clip, fit whole motion cycles into the orbit where practical so both return smoothly to their starting states. Show subtle motion in an optional close-up. Use a neutral pose for a static asset or when requested.
+
+Before rendering the sequence, make four draft views a quarter turn apart. For motion, sample at least two distinct poses at those angles. Sampling the same time in each cycle can make an animated asset look frozen. Check the silhouette, travel, framing, lighting, back, and underside or top details that matter. Use the pinned renderer and a bounded frame count, resolution, render time and output directory.
+
+Export H.264 MP4 with `yuv420p` and fast start for broad playback support. Use evenly spaced frames and leave out the duplicate final pose to allow smooth looping. Render a numbered sequence or use a renderer that can detect incomplete frames. Check that the final file decodes, has the expected frame count and duration, and shows articulation and full framing through the orbit. Link the MP4 in the handoff.
