@@ -12,9 +12,9 @@ Take the asset through the requested stages and deliver the result in the same t
 Load the installed stage skills by name or read the linked sibling `SKILL.md` files. Open each when you reach its stage and follow the references relevant to the task. If a needed skill is unavailable, name it and continue any work you can verify with the available stages.
 
 1. [propamatic-plan](../propamatic-plan/SKILL.md) turns the brief or references into a measured parts plan. Carry forward the intended shape, pivots, travel, and acceptance criteria.
-2. [propamatic-build](../propamatic-build/SKILL.md) makes the editable Blender asset. Check the moving envelope and nearby fixed parts before spending time on detail.
-3. [propamatic-rig](../propamatic-rig/SKILL.md) adds controls and bakes the intended motion. Skip this stage for static props. For new articulation, try a low-detail export and verify its timing and endpoint poses before final renders or baking.
-4. [propamatic-verify](../propamatic-verify/SKILL.md) checks the exact candidate export against the plan and intended runtime. Fix failures at the relevant stage and repeat the affected checks. Render the finished MP4 turntable with representative motion playing for articulated assets.
+2. [propamatic-build](../propamatic-build/SKILL.md) makes the editable Blender asset.
+3. [propamatic-rig](../propamatic-rig/SKILL.md) adds controls and bakes the intended motion. Skip this stage for static props.
+4. [propamatic-verify](../propamatic-verify/SKILL.md) checks the exact candidate export against the plan and intended runtime. Fix failures at the relevant stage and repeat the affected checks.
 
 Continue between stages without waiting for routine approvals. Follow the stage skills' execution and upload boundaries and the user's existing authorization. When a material design decision or required permission needs input, do the independent work first.
 
