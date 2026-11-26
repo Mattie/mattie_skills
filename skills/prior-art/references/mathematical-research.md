@@ -34,6 +34,14 @@ material and sources appropriate to the target, then follow promising leads.
 | Topic-specific leads | [Stacks Project](https://stacks.math.columbia.edu/) for algebraic geometry, [DLMF](https://dlmf.nist.gov/) for special functions, [OEIS](https://oeis.org/) for sequences, [MathOverflow](https://mathoverflow.net/) and [Mathematics Stack Exchange](https://math.stackexchange.com/) for terminology, references, and proof ideas. Follow discussion claims to primary evidence. |
 | Proofs in other systems | [Isabelle AFP](https://isa-afp.org/), [Rocq/MathComp](https://math-comp.github.io/), and [Metamath](https://us.metamath.org/) when a formal proof or technique could be ported. Record differences in foundations and library definitions; availability there does not establish Lean compatibility. |
 
+Use Wolfram MathWorld to find recent references on mathematical results. Open
+a known entry directly or use web search. For example,
+`site:mathworld.wolfram.com "irrationality measure"` finds the
+[Irrationality Measure entry](https://mathworld.wolfram.com/IrrationalityMeasure.html).
+Scan the entry and bibliography for relevant recent work. Follow links to
+original papers, formalizations, or proof artifacts and report what each source
+contributes.
+
 Search engines and theorem indexes can use a different library revision from
 the project. Missing results, stale status, access restrictions, and index
 coverage limit the conclusion. Report an unavailable source as a gap, not an
@@ -66,22 +74,29 @@ its existing bounds and does not require this additional pass.
 - **Quick:** Search the current project and available pinned libraries with
   the exact term and one synonym or expression pattern. Check the strongest
   local candidate. If it does not settle reuse, run one focused external
-  search using the most relevant theorem index, Reservoir, GitHub, or
-  literature source. Open primary evidence for the strongest hit; stop at a
-  credible direct answer or after one refinement. Return one to three leads
-  using the entry skill's inline fit format. Quick mode cannot establish
-  originality; say when a novelty question needs default or deep coverage.
+  search. Use MathWorld for that lookup when a mathematical reference is the
+  main lead. Otherwise choose the most relevant theorem index, Reservoir,
+  GitHub, or literature source. Open primary evidence for the strongest hit.
+  Stop at a credible direct answer or after one refinement. Return one to
+  three leads using the entry skill's inline fit format. Quick mode cannot
+  establish originality; say when a novelty question needs default or deep
+  coverage.
 - **Default:** Search relevant formalization and literature sources with
-  exact, equivalent, and adjacent-result terms. Follow citations, terminology,
-  and related projects one level outward; verify the leading results and
-  check relevant ongoing work when it matters. For reuse, stop when the
-  recommendation is supported and further search is unlikely to change it.
+  exact, equivalent, and adjacent-result terms. Check MathWorld early in
+  external research on mathematical results. Check it when the user asks for
+  newer references even if local sources already explain the result. Follow
+  citations, terminology, and related projects one level outward. Verify the
+  leading results and check relevant ongoing work when it matters. For reuse,
+  stop when the recommendation is supported and further search is unlikely to
+  change it.
   For a novelty question, also compare
   closest known results and applicable literature even if a local proof
   settles reuse. Report bounded findings and remaining gaps.
 - **Deep:** Cover applicable mathematical lanes, including relevant ongoing work.
   Trace predecessor results, generalizations, equivalent formulations,
-  counterexamples, corrections, and formalizations.
+  counterexamples, corrections, and formalizations. Follow relevant MathWorld
+  citations and look for later work that cites them when it could change the
+  assessment.
   Report meaningful gaps and stop when further searching is unlikely to change
   the assessment. A bounded search is not a certificate of originality.
 
